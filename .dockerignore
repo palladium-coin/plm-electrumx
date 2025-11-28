@@ -1,0 +1,53 @@
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+LICENSE
+
+# Docker files (not needed in image)
+docker-compose.yml
+.dockerignore
+
+# Data and runtime files
+data/
+*.log
+*.pid
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test files
+test-server.py
+tests/
+
+# Environment files
+.env
+.env.local
+*.pem
+*.key
+*.crt
+
+# Plans and notes
+.claude/
+*.tmp
