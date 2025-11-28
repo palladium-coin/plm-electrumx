@@ -10,9 +10,15 @@ services:
       - "50002:50002"  # SSL
 
     environment:
-      COIN: "Palladium"
-      NET: "mainnet"
+      # ===== Network Configuration =====
+      # For MAINNET use: COIN: "Palladium" and DAEMON_URL port 2332
+      # For TESTNET use: COIN: "PalladiumTestnet" and DAEMON_URL port 12332
 
+      COIN: "Palladium"  # Change to "PalladiumTestnet" for testnet
+      NET: "mainnet"     # This is set automatically by the COIN parameter
+
+      # Palladium Core RPC connection
+      # MAINNET: port 2332 | TESTNET: port 12332
       DAEMON_URL: "http://<rpcuser>:<rpcpassword>@host.docker.internal:2332/"  # RPC credentials
 
       SERVICES: "tcp://0.0.0.0:50001,ssl://0.0.0.0:50002"

@@ -60,7 +60,7 @@ Replace with your actual values:
 
 * `<rpcuser>` → RPC username of the node
 * `<rpcpassword>` → RPC password of the node
-* `<port>` → RPC port of the node (e.g., `2332` for Palladium)
+* `<port>` → RPC port of the node (`2332` for mainnet, `12332` for testnet)
 
 **Note:** The compose uses `host.docker.internal` to connect to the Palladium node running on your host machine (outside the container). This works on both Windows/Mac and Linux thanks to the `extra_hosts` configuration.
 
@@ -69,6 +69,150 @@ Replace with your actual values:
 - `50002` → SSL (encrypted, recommended)
 
 **Important:** never include real credentials in files you upload to GitHub.
+
+---
+
+## Network Support (Mainnet & Testnet)
+
+This ElectrumX server supports both **Palladium mainnet** and **testnet**. You can switch between networks by modifying the `docker-compose.yml` configuration.
+
+### Network Comparison
+
+| Network | COIN Value | RPC Port | Bech32 Prefix | Address Prefix |
+|---------|-----------|----------|---------------|----------------|
+| **Mainnet** | `Palladium` | `2332` | `plm` | Standard (starts with `1` or `3`) |
+| **Testnet** | `PalladiumTestnet` | `12332` | `tplm` | Testnet (starts with `t`) |
+
+---
+
+### Running on Mainnet (Default)
+
+The default configuration is set for **mainnet**. No changes are needed if you want to run on mainnet.
+
+**Configuration in `docker-compose.yml`:**
+```yaml
+environment:
+  COIN: "Palladium"
+  DAEMON_URL: "http://<rpcuser>:<rpcpassword>@host.docker.internal:2332/"
+```
+
+**Requirements:**
+- Palladium Core node running on **mainnet**
+- RPC port: `2332`
+- RPC credentials configured in `palladium.conf`
+
+---
+
+### Switching to Testnet
+
+To run ElectrumX on **testnet**, follow these steps:
+
+#### Step 1: Configure Palladium Core for Testnet
+
+Edit your Palladium Core configuration file (`palladium.conf`) and add:
+
+```conf
+# Enable testnet
+testnet=1
+
+# RPC settings for testnet
+rpcuser=your_rpc_username
+rpcpassword=your_rpc_password
+rpcport=12332
+
+# Allow RPC connections
+server=1
+```
+
+Restart your Palladium Core node to apply testnet configuration.
+
+#### Step 2: Modify docker-compose.yml
+
+Open `docker-compose.yml` and change these two values in the `environment` section:
+
+**Before (Mainnet):**
+```yaml
+environment:
+  COIN: "Palladium"
+  DAEMON_URL: "http://<rpcuser>:<rpcpassword>@host.docker.internal:2332/"
+```
+
+**After (Testnet):**
+```yaml
+environment:
+  COIN: "PalladiumTestnet"
+  DAEMON_URL: "http://<rpcuser>:<rpcpassword>@host.docker.internal:12332/"
+```
+
+**Important changes:**
+1. Change `COIN` from `"Palladium"` to `"PalladiumTestnet"`
+2. Change port in `DAEMON_URL` from `2332` to `12332`
+3. Replace `<rpcuser>` and `<rpcpassword>` with your actual testnet RPC credentials
+
+#### Step 3: Clear Existing Database (Important!)
+
+When switching networks, you **must** clear the ElectrumX database to avoid conflicts:
+
+```bash
+# Stop the container
+docker compose down
+
+# Remove the database
+rm -rf ./data/*
+
+# Or on Windows:
+# rmdir /s /q data
+# mkdir data
+```
+
+#### Step 4: Rebuild and Restart
+
+```bash
+# Rebuild the image (if you modified coins_plm.py)
+docker build -t electrumx-plm:local .
+
+# Start the container
+docker compose up -d
+
+# Monitor the logs
+docker compose logs -f
+```
+
+The ElectrumX server will now sync with the Palladium **testnet** blockchain.
+
+---
+
+### Testnet-Specific Information
+
+**Genesis Block Hash (Testnet):**
+```
+000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943
+```
+
+**Address Examples:**
+- Legacy (P2PKH): starts with `t` (e.g., `tPLMAddress123...`)
+- SegWit (Bech32): starts with `tplm` (e.g., `tplm1q...`)
+
+**Network Ports:**
+- Palladium Core RPC: `12332`
+- Palladium Core P2P: `12333`
+- ElectrumX TCP: `50001` (same as mainnet)
+- ElectrumX SSL: `50002` (same as mainnet)
+
+---
+
+### Switching Back to Mainnet
+
+To switch back from testnet to mainnet:
+
+1. Edit `palladium.conf` and remove or comment `testnet=1`
+2. Change `rpcport=2332` in `palladium.conf`
+3. Restart Palladium Core node
+4. In `docker-compose.yml`, change:
+   - `COIN: "PalladiumTestnet"` → `COIN: "Palladium"`
+   - Port in `DAEMON_URL` from `12332` → `2332`
+5. Clear database: `rm -rf ./data/*`
+6. Restart ElectrumX: `docker compose down && docker compose up -d`
 
 ---
 
@@ -115,7 +259,8 @@ The script will perform:
 
 ## Notes
 
-* `coins_plm.py` defines the **Palladium (PLM)** coin, based on Bitcoin.
+* `coins_plm.py` defines both **Palladium (PLM)** mainnet and **PalladiumTestnet** classes
+* See "Network Support" section for switching between mainnet and testnet
 * Production recommendations:
 
   * Protect RPC credentials
