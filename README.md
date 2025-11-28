@@ -78,10 +78,10 @@ This ElectrumX server supports both **Palladium mainnet** and **testnet**. You c
 
 ### Network Comparison
 
-| Network | COIN Value | RPC Port | Bech32 Prefix | Address Prefix |
-|---------|-----------|----------|---------------|----------------|
-| **Mainnet** | `Palladium` | `2332` | `plm` | Standard (starts with `1` or `3`) |
-| **Testnet** | `PalladiumTestnet` | `12332` | `tplm` | Testnet (starts with `t`) |
+| Network | COIN Value | NET Value | RPC Port | Bech32 Prefix | Address Prefix |
+|---------|-----------|-----------|----------|---------------|----------------|
+| **Mainnet** | `Palladium` | `mainnet` | `2332` | `plm` | Standard (starts with `1` or `3`) |
+| **Testnet** | `Palladium` | `testnet` | `12332` | `tplm` | Testnet (starts with `t`) |
 
 ---
 
@@ -93,6 +93,7 @@ The default configuration is set for **mainnet**. No changes are needed if you w
 ```yaml
 environment:
   COIN: "Palladium"
+  NET: "mainnet"
   DAEMON_URL: "http://<rpcuser>:<rpcpassword>@host.docker.internal:2332/"
 ```
 
@@ -134,18 +135,20 @@ Open `docker-compose.yml` and change these two values in the `environment` secti
 ```yaml
 environment:
   COIN: "Palladium"
+  NET: "mainnet"
   DAEMON_URL: "http://<rpcuser>:<rpcpassword>@host.docker.internal:2332/"
 ```
 
 **After (Testnet):**
 ```yaml
 environment:
-  COIN: "PalladiumTestnet"
+  COIN: "Palladium"
+  NET: "testnet"
   DAEMON_URL: "http://<rpcuser>:<rpcpassword>@host.docker.internal:12332/"
 ```
 
 **Important changes:**
-1. Change `COIN` from `"Palladium"` to `"PalladiumTestnet"`
+1. Change `NET` from `"mainnet"` to `"testnet"`
 2. Change port in `DAEMON_URL` from `2332` to `12332`
 3. Replace `<rpcuser>` and `<rpcpassword>` with your actual testnet RPC credentials
 
@@ -209,7 +212,7 @@ To switch back from testnet to mainnet:
 2. Change `rpcport=2332` in `palladium.conf`
 3. Restart Palladium Core node
 4. In `docker-compose.yml`, change:
-   - `COIN: "PalladiumTestnet"` → `COIN: "Palladium"`
+   - `NET: "testnet"` → `NET: "mainnet"`
    - Port in `DAEMON_URL` from `12332` → `2332`
 5. Clear database: `rm -rf ./data/*`
 6. Restart ElectrumX: `docker compose down && docker compose up -d`
