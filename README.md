@@ -65,11 +65,10 @@ rpcpassword=<rpcpassword>
 rpcport=2332
 
 # Allow Docker containers to connect (REQUIRED for ElectrumX)
-# These settings allow RPC connections from Docker's network
+# This setting allows RPC connections from all Docker networks
 rpcbind=0.0.0.0
 rpcallowip=127.0.0.1
-rpcallowip=172.17.0.0/16
-rpcallowip=172.18.0.0/16
+rpcallowip=172.16.0.0/12
 
 # Optional: reduce debug log verbosity
 printtoconsole=0
@@ -77,10 +76,10 @@ printtoconsole=0
 
 **Important Notes:**
 - **`rpcbind=0.0.0.0`**: Makes the RPC server listen on all network interfaces (not just localhost)
-- **`rpcallowip=172.17.0.0/16` and `172.18.0.0/16`**: Allow connections from Docker's default bridge networks
-  - On **Linux**, Docker containers run in isolated networks (typically `172.17.x.x` or `172.18.x.x`)
-  - Without these settings, ElectrumX won't be able to connect to your Palladium node
-  - On **Windows/Mac** with Docker Desktop, these are still recommended for consistency
+- **`rpcallowip=172.16.0.0/12`**: Allows connections from **all** Docker networks (covers 172.16.x.x through 172.31.x.x)
+  - Docker containers run in isolated networks that can vary (172.17.x.x, 172.18.x.x, 172.21.x.x, etc.)
+  - The `/12` subnet covers all possible Docker bridge networks, making this configuration universal
+  - Without this setting, ElectrumX won't be able to connect to your Palladium node
 - **Security**: These settings only allow local Docker containers to connect, not external machines
 - **Change the credentials**: Never use default usernames/passwords in production
 
@@ -170,8 +169,7 @@ rpcport=12332
 # Allow Docker containers to connect (REQUIRED for ElectrumX)
 rpcbind=0.0.0.0
 rpcallowip=127.0.0.1
-rpcallowip=172.17.0.0/16
-rpcallowip=172.18.0.0/16
+rpcallowip=172.16.0.0/12
 ```
 
 **Important:** The `rpcbind` and `rpcallowip` settings are **required** for Docker connectivity on all platforms. Without these, ElectrumX won't be able to connect to your Palladium node from inside the Docker container.
