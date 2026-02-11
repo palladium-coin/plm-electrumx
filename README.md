@@ -5,10 +5,10 @@ It also includes a test script (`test-server.py`) to verify the connection and m
 
 Tested on:
 
-* ✅ Debian 12
-* ✅ Ubuntu 24.04
+* Debian 12/13
+* Ubuntu 24.04
 
-🔗 Palladium Full Node: [davide3011/palladiumcore](https://github.com/davide3011/palladiumcore)
+Palladium Full Node: [palladiumcore](https://github.com/palladium-coin/palladiumcore#)
 
 ---
 
@@ -29,7 +29,7 @@ Tested on:
 * [Docker](https://docs.docker.com/get-docker/)
 * [Docker Compose](https://docs.docker.com/compose/install/)
 * Python 3.10+ (to use `test-server.py`)
-* A running **Palladium** full node ([NotRin7/Palladium](https://github.com/NotRin7/Palladium))
+* A running **Palladium** full node ([palladiumcore](https://github.com/palladium-coin/palladiumcore#))
 
 **System Architecture**: This server requires a **64-bit system** (both AMD64 and ARM64 architectures are supported, but 32-bit systems are not compatible).
 
@@ -54,14 +54,24 @@ Before running ElectrumX, you need to configure your Palladium Core node to acce
 ### Recommended palladium.conf for Mainnet
 
 ```conf
-# Server mode (required for RPC)
+#################################
+# BASIC NODE SETTINGS
+#################################
+
 server=1
+daemon=1
+listen=1
+discover=1
+port=2333
+bind=0.0.0.0
 
-# RPC credentials (change these!)
-rpcuser=<rpcuser>
-rpcpassword=<rpcpassword>
+#################################
+# RPC SETTINGS
+#################################
 
-# RPC port (default for mainnet)
+rpcuser=<rpcuser>            # change this!
+rpcpassword=<rpcpassword>    # change this!
+
 rpcport=2332
 
 # Allow Docker containers to connect (REQUIRED for ElectrumX)
@@ -70,7 +80,25 @@ rpcbind=0.0.0.0
 rpcallowip=127.0.0.1
 rpcallowip=172.16.0.0/12
 
-# Optional: reduce debug log verbosity
+#################################
+# ELECTRUMX REQUIREMENTS
+#################################
+
+txindex=1
+addressindex=1
+spentindex=1
+
+#################################
+# PERFORMANCE
+#################################
+
+dbcache=1024
+maxconnections=64
+
+#################################
+# LOGGING
+#################################
+
 printtoconsole=0
 ```
 
