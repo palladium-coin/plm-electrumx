@@ -15,11 +15,11 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-VERSION="ElectrumX 2.0.0"
+VERSION="plm-electrumx 1.0.0"
 
 # -- Project information -----------------------------------------------------
 
-project = 'ElectrumX'
+project = 'plm-electrumx'
 copyright = '2016-2026, various'
 author = 'Electrum developers'
 

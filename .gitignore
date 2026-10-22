@@ -22,3 +22,5 @@
 
 .coverage
 /htmlcov/
+/src/plm_electrumx.egg-info/
+/plm_electrumx.egg-info/

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`plm-electrumx`: a fork of ElectrumX 2.0.x (package name `e-x`, import name `electrumx`), an Electrum-protocol server (asyncio) that indexes a coin daemon into a local DB (LevelDB or RocksDB), supporting **Palladium (PLM) only**. All other coins and their code were removed (see the "Fork notes" in `README.md` for the upstream base commit and how to merge upstream). Keep changes to core files small so upstream merges stay easy. MIT license: keep `LICENCE`.
+`plm-electrumx`: a fork of ElectrumX 2.0.0 with its own versioning (package name `plm-electrumx`, version in `src/electrumx/__init__.py` and `docs/conf.py`, import name `electrumx`), an Electrum-protocol server (asyncio) that indexes a coin daemon into a local DB (LevelDB or RocksDB), supporting **Palladium (PLM) only**. All other coins and their code were removed (see the "Fork notes" in `README.md` for the upstream base commit and how to merge upstream). Keep changes to core files small so upstream merges stay easy. MIT license: keep `LICENCE`.
 
 ## Commands
 
