@@ -11,46 +11,43 @@ from binascii import unhexlify
 
 import pytest
 
-from electrumx.lib.coins import Coin, Namecoin
+from electrumx.lib.coins import Coin
 from electrumx.lib.hash import hash_to_hex_str
-from electrumx.lib.script import OpCodes, Script
 
 TRANSACTION_DIR = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), 'transactions')
 
-# Find testcases
-transactions_bitcoin = []
-transactions_alts = []
+# Find testcases. File names are <coin>_<net>_<id>.json,
+# vout values are in satoshis.
+transactions = []
 
-for name in os.listdir(TRANSACTION_DIR):
+for name in sorted(os.listdir(TRANSACTION_DIR)):
     name_parts = name.split("_")
-    tx_list = transactions_bitcoin if name_parts[0] == "bitcoin" else transactions_alts
     try:
-        coinFound = Coin.lookup_coin_class(name_parts[0], name_parts[1])
+        coin = Coin.lookup_coin_class(name_parts[0], name_parts[1])
         with open(os.path.join(TRANSACTION_DIR, name)) as f:
-            tx_list.append((coinFound, json.load(f)))
-    except Exception as e:
-        tx_list.append(pytest.fail(name))
+            transactions.append((coin, json.load(f)))
+    except Exception:
+        transactions.append(pytest.fail(name))
 
 
-@pytest.fixture(params=transactions_bitcoin)
-def transaction_details_bitcoin(request):
+@pytest.fixture(params=transactions)
+def transaction_details(request):
     return request.param
 
 
-def test_transaction_bitcoin(transaction_details_bitcoin):
-    coin, tx_info = transaction_details_bitcoin
+def test_transaction(transaction_details):
+    coin, tx_info = transaction_details
 
     raw_tx = unhexlify(tx_info['hex'])
     tx, vsize = coin.DESERIALIZER(raw_tx, 0).read_tx_and_vsize()
-    tx_hash = tx.txid_rev
-    assert tx_info['txid'] == hash_to_hex_str(tx_hash)
+    assert tx_info['txid'] == hash_to_hex_str(tx.txid_rev)
     assert tx_info['hash'] == hash_to_hex_str(tx.wtxid_rev)
-
     assert tx_info['version'] == tx.version
     assert tx_info['vsize'] == vsize
 
     vin = tx_info['vin']
+    assert len(vin) == len(tx.inputs)
     for i in range(len(vin)):
         assert vin[i]['txid'] == hash_to_hex_str(tx.inputs[i].prev_txid_rev)
         assert vin[i]['vout'] == tx.inputs[i].prev_idx
@@ -58,62 +55,13 @@ def test_transaction_bitcoin(transaction_details_bitcoin):
             assert vin[i]["txinwitness"] == [x.hex() for x in tx.witness[i]]
 
     vout = tx_info['vout']
+    assert len(vout) == len(tx.outputs)
     for i in range(len(vout)):
-        # value pk_script
-        assert vout[i]['value'] == tx.outputs[i].value / 10**8
-        spk = vout[i]['scriptPubKey']
-        tx_pks = tx.outputs[i].pk_script
-        assert spk['hex'] == tx_pks.hex()
-
-
-##########
-# Non-Bitcoin stuff goes below this line.
-
-@pytest.fixture(params=transactions_alts)
-def transaction_details_altcoin(request):
-    return request.param
-
-
-def test_transaction_alts(transaction_details_altcoin):
-    coin, tx_info = transaction_details_altcoin
-
-    raw_tx = unhexlify(tx_info['hex'])
-    tx = coin.DESERIALIZER(raw_tx, 0).read_tx()
-    tx_hash = tx.txid_rev
-    assert tx_info['txid'] == hash_to_hex_str(tx_hash)
-    if expected_wtxid := tx_info.get('hash'):
-        assert expected_wtxid == hash_to_hex_str(tx.wtxid_rev)
-
-    vin = tx_info['vin']
-    for i in range(len(vin)):
-        assert vin[i]['txid'] == hash_to_hex_str(tx.inputs[i].prev_txid_rev)
-        assert vin[i]['vout'] == tx.inputs[i].prev_idx
-
-    vout = tx_info['vout']
-    for i in range(len(vout)):
-        # value pk_script
         assert vout[i]['value'] == tx.outputs[i].value
         spk = vout[i]['scriptPubKey']
         tx_pks = tx.outputs[i].pk_script
         assert spk['hex'] == tx_pks.hex()
-        if "addresses" in spk:
-            assert len(spk["addresses"]) == 1
-            address = spk["addresses"][0]
-        else:
-            address = spk["address"]
-        if spk.get("type", "").startswith("witness_"):
+        if spk['type'].startswith("witness_"):
             continue  # bech32 addresses are not supported by Coin.address_to_hashX
+        address, = spk["addresses"]
         assert coin.address_to_hashX(address) == coin.hashX_from_script(tx_pks)
-        if issubclass(coin, Namecoin):
-            if "nameOp" not in spk or "name" not in spk["nameOp"]:
-                assert coin.name_hashX_from_script(tx_pks) is None
-            else:
-                OP_NAME_UPDATE = OpCodes.OP_3
-                normalized_name_op_script = bytearray()
-                normalized_name_op_script.append(OP_NAME_UPDATE)
-                normalized_name_op_script.extend(Script.push_data(spk["nameOp"]["name"].encode("ascii")))
-                normalized_name_op_script.extend(Script.push_data(bytes([])))
-                normalized_name_op_script.append(OpCodes.OP_2DROP)
-                normalized_name_op_script.append(OpCodes.OP_DROP)
-                normalized_name_op_script.append(OpCodes.OP_RETURN)
-                assert coin.name_hashX_from_script(tx_pks) == Coin.hashX_from_script(normalized_name_op_script)

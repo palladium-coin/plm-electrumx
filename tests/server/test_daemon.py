@@ -6,25 +6,19 @@ import logging
 import pytest
 
 from aiorpcx import JSONRPCv1, JSONRPCLoose, RPCError, ignore_after, Request
-from electrumx.lib.coins import BitcoinCash, CoinError, Bitzeny, Dash
-from electrumx.server.daemon import Daemon, FakeEstimateFeeDaemon
+from electrumx.lib.coins import Palladium, CoinError
+from electrumx.server.daemon import Daemon
 
 
-coin = BitcoinCash
+coin = Palladium
 
 # These should be full, canonical URLs
-urls = ['http://rpc_user:rpc_pass@127.0.0.1:8332/',
-        'http://rpc_user:rpc_pass@192.168.0.1:8332/']
+urls = ['http://rpc_user:rpc_pass@127.0.0.1:2332/',
+        'http://rpc_user:rpc_pass@192.168.0.1:2332/']
 
 
-@pytest.fixture(params=[BitcoinCash, Bitzeny])
+@pytest.fixture(params=[Palladium])
 def daemon(request):
-    coin = request.param
-    return coin.DAEMON(coin, ','.join(urls))
-
-
-@pytest.fixture(params=[Dash])
-def dash_daemon(request):
     coin = request.param
     return coin.DAEMON(coin, ','.join(urls))
 
@@ -161,7 +155,7 @@ async def test_set_urls_one(caplog):
         assert daemon.current_url() == urls[0]
         assert len(daemon.urls) == 1
         logged_url = daemon.logged_url()
-        assert logged_url == '127.0.0.1:8332/'
+        assert logged_url == '127.0.0.1:2332/'
         assert in_caplog(caplog, f'daemon #1 at {logged_url} (current)')
 
 
@@ -172,9 +166,9 @@ async def test_set_urls_two(caplog):
         assert daemon.current_url() == urls[0]
         assert len(daemon.urls) == 2
         logged_url = daemon.logged_url()
-        assert logged_url == '127.0.0.1:8332/'
+        assert logged_url == '127.0.0.1:2332/'
         assert in_caplog(caplog, f'daemon #1 at {logged_url} (current)')
-        assert in_caplog(caplog, 'daemon #2 at 192.168.0.1:8332')
+        assert in_caplog(caplog, 'daemon #2 at 192.168.0.1:2332')
 
 
 @pytest.mark.asyncio
@@ -246,10 +240,7 @@ async def test_broadcast_package(daemon):
 
 @pytest.mark.asyncio
 async def test_relayfee(daemon):
-    if isinstance(daemon, FakeEstimateFeeDaemon):
-        sats = daemon.coin.ESTIMATE_FEE
-    else:
-        sats = 2
+    sats = 2
     response = {"relayfee": sats, "other:": "cruft"}
     daemon.session = ClientSessionGood(('getnetworkinfo', [], response))
     assert await daemon.relayfee() == sats
@@ -288,10 +279,7 @@ async def test_deserialised_block(daemon):
 @pytest.mark.asyncio
 async def test_estimatefee(daemon):
     method_not_found = RPCError(JSONRPCv1.METHOD_NOT_FOUND, 'nope')
-    if isinstance(daemon, FakeEstimateFeeDaemon):
-        result = daemon.coin.ESTIMATE_FEE
-    else:
-        result = -1
+    result = -1
     daemon.session = ClientSessionGood(
             ('estimatesmartfee', [], method_not_found),
             ('estimatefee', [2], result)
@@ -302,8 +290,6 @@ async def test_estimatefee(daemon):
 @pytest.mark.asyncio
 async def test_estimatefee_smart(daemon):
     bad_args = RPCError(JSONRPCv1.INVALID_ARGS, 'bad args')
-    if isinstance(daemon, FakeEstimateFeeDaemon):
-        return
     rate = 0.0002
     result = {'feerate': rate}
     daemon.session = ClientSessionGood(
@@ -330,13 +316,6 @@ async def test_getrawtransaction(daemon):
     daemon.session = ClientSessionGood(('getrawtransaction', [hex_hash, 1], verbose))
     assert await daemon.getrawtransaction(
         hex_hash, True) == verbose
-
-
-@pytest.mark.asyncio
-async def test_protx(dash_daemon):
-    protx_hash = 'deadbeaf'
-    dash_daemon.session = ClientSessionGood(('protx', ['info', protx_hash], {}))
-    assert await dash_daemon.protx(['info', protx_hash]) == {}
 
 
 # Batch tests

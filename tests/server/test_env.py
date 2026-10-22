@@ -91,56 +91,23 @@ def test_COIN_NET():
     '''Test COIN and NET defaults and redirection.'''
     setup_base_env()
     e = Env()
-    assert e.coin == lib_coins.BitcoinMainnet
+    assert e.coin == lib_coins.Palladium
     os.environ['NET'] = 'testnet'
     e = Env()
-    assert e.coin == lib_coins.BitcoinTestnet3
+    assert e.coin == lib_coins.PalladiumTestnet
     os.environ['NET'] = ' testnet '
     e = Env()
-    assert e.coin == lib_coins.BitcoinTestnet3
-    os.environ.pop('NET')
-    os.environ['COIN'] = ' Litecoin '
-    e = Env()
-    assert e.coin == lib_coins.Litecoin
-    os.environ['NET'] = 'testnet'
-    e = Env()
-    assert e.coin == lib_coins.LitecoinTestnet
-    os.environ.pop('NET')
-    os.environ['COIN'] = ' BitcoinGold '
-    e = Env()
-    assert e.coin == lib_coins.BitcoinGold
-    os.environ['NET'] = 'testnet'
-    e = Env()
-    assert e.coin == lib_coins.BitcoinGoldTestnet
+    assert e.coin == lib_coins.PalladiumTestnet
     os.environ['NET'] = 'regtest'
     e = Env()
-    assert e.coin == lib_coins.BitcoinGoldRegtest
+    assert e.coin == lib_coins.PalladiumRegtest
     os.environ.pop('NET')
-    os.environ['COIN'] = ' Decred '
+    os.environ['COIN'] = ' Palladium '
     e = Env()
-    assert e.coin == lib_coins.Decred
-    os.environ['NET'] = 'testnet'
-    e = Env()
-    assert e.coin == lib_coins.DecredTestnet
-    os.environ.pop('NET')
-    os.environ['COIN'] = ' BitcoinGreen '
-    e = Env()
-    assert e.coin == lib_coins.Bitg
-    os.environ['NET'] = 'mainnet'
-    e = Env()
-    os.environ.pop('NET')
-    os.environ['COIN'] = ' Pivx '
-    os.environ['NET'] = 'mainnet'
-    e = Env()
-    assert e.coin == lib_coins.Pivx
-    os.environ['NET'] = 'testnet'
-    e = Env()
-    assert e.coin == lib_coins.PivxTestnet
-    os.environ.pop('NET')
-    os.environ['NET'] = 'mainnet'
-    os.environ['COIN'] = ' TokenPay '
-    e = Env()
-    assert e.coin == lib_coins.TokenPay
+    assert e.coin == lib_coins.Palladium
+    os.environ['COIN'] = 'Bitcoin'
+    with pytest.raises(lib_coins.CoinError):
+        Env()
 
 
 def test_CACHE_MB():
@@ -273,7 +240,7 @@ def test_REPORT_SERVICES_localhost():
 
 def test_REORG_LIMIT():
     assert_integer('REORG_LIMIT', 'reorg_limit',
-                   lib_coins.Bitcoin.REORG_LIMIT)
+                   lib_coins.Palladium.REORG_LIMIT)
 
 
 def test_COST_HARD_LIMIT():
@@ -426,5 +393,5 @@ def test_ban_versions():
 
 
 def test_coin_class_provided():
-    e = Env(lib_coins.Bitcoin)
-    assert e.coin == lib_coins.Bitcoin
+    e = Env(lib_coins.Palladium)
+    assert e.coin == lib_coins.Palladium
