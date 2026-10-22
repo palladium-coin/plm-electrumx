@@ -19,3 +19,6 @@
 /e_x.egg-info/
 
 .env
+
+.coverage
+/htmlcov/

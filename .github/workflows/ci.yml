@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:  # https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow
 
 concurrency:
@@ -31,10 +31,8 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'pyproject.toml'
 
-      - name: Log Python version and Git tag
-        run: |
-          python3 --version
-          git tag
+      - name: Log Python version
+        run: python3 --version
 
       - name: Install Python deps
         run: |
@@ -73,7 +71,6 @@ jobs:
   build_docs:
     # note: this build task is not related to read-the-docs; it is only here to sanity-check the docs can be built.
     #       For the read-the-docs build, see .readthedocs.yml
-    #       and the webhook set up in https://github.com/spesmilo/electrumx/settings/hooks
     name: build_docs
     runs-on: ubuntu-24.04
     env:
@@ -94,3 +91,16 @@ jobs:
         run: |
           cd docs
           make html
+
+  docker:
+    # builds the image and checks the SSL handling of its entrypoint (contrib/docker-smoke-test.sh)
+    name: docker
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build image
+        run: docker build -t plm-electrumx .
+
+      - name: Smoke test
+        run: contrib/docker-smoke-test.sh plm-electrumx
