@@ -87,7 +87,7 @@ addresses and balances unencrypted.
 `docker-entrypoint.sh` (the entrypoint of the image) does this at every start:
 
 1. If you gave your own certificate (`SSL_CERTFILE` and `SSL_KEYFILE`, see below), it uses that.
-2. Otherwise it looks for `/var/lib/electrumx-ssl/server.crt` and `server.key`, in the `electrumx-ssl` volume.
+2. Otherwise it looks for `server.crt` and `server.key` in `~/.plm-electrumx/ssl` (`/var/lib/electrumx-ssl` in the container).
    - **They exist: they are used as they are, never overwritten.**
    - **They do not exist (first start): a self-signed certificate valid 10 years is generated** for `SSL_HOSTNAME`
      and saved there. If only one of the two files exists, the container stops with an error instead of overwriting it.
@@ -111,15 +111,15 @@ the wallet saves the certificate, and from then on it refuses a different one (a
 man-in-the-middle cannot take over later. The fields of the certificate (name, country, ...) are not checked by the
 client, only the expiry date. Consequences:
 
-- **Keep the certificate.** It is in the `electrumx-ssl` volume, separate from the database on purpose: the database
-  can be deleted and rebuilt at any time (`docker volume rm <project>_electrumx-db`), the certificate should not be.
-  `docker compose down -v` deletes **both** volumes, and after that a new certificate is generated and every client
-  that saved the old one refuses to connect.
-- **Back it up** while the container runs:
+- **Keep the certificate.** It is in `~/.plm-electrumx/ssl`, separate from the database (`~/.plm-electrumx/db`) on
+  purpose: the database can be deleted and rebuilt at any time, the certificate should not be. If `ssl/` is deleted,
+  a new certificate is generated and every client that saved the old one refuses to connect.
+- **Back it up** by copying the folder (it contains the private key: keep it private):
   ```bash
-  docker compose cp electrumx:/var/lib/electrumx-ssl ./ssl-backup     # contains the private key: keep it private
+  cp -a ~/.plm-electrumx/ssl /safe/place/plm-electrumx-ssl
   ```
-  To restore it, put the two files somewhere on the host and use them as "your own certificate" below.
+  To restore it, copy the two files (`server.crt`, `server.key`) back into `~/.plm-electrumx/ssl` before the first
+  start, or use them as "your own certificate" below.
 - If it expires or is lost, clients that saved it must be told to forget it, or the server must get a new name.
   Generated certificates last 10 years, so expiry is rarely the problem.
 - Whether a wallet accepts a self-signed certificate depends on the wallet. Electrum does (trust on first use);
@@ -173,14 +173,25 @@ Peer discovery is on by default (`PEER_DISCOVERY`, `PEER_ANNOUNCE`). `lib/coins.
 servers you know there (format: `'host s t'`, for example `'electrum.example.com s50002 t50001'`) and rebuild, or
 keep the server private with `PEER_DISCOVERY=off` / `PEER_DISCOVERY=self`.
 
-## Resources and first start
+## Data directory and first start
+
+Create the data directory as the user that runs Docker, before the first start (otherwise Docker creates it as root and
+the container cannot write; the log then says `ERROR: ... is not writable`):
+
+```bash
+mkdir -p ~/.plm-electrumx/db ~/.plm-electrumx/ssl
+```
+
+The container runs as uid/gid 1000 (the first user of most hosts). For another user set `PLM_UID` / `PLM_GID` in `.env`.
+To keep the data elsewhere, set `ELECTRUMX_DATADIR` in `.env`.
 
 - On the first start ElectrumX builds its database from the node, from genesis. With the chain at about 542,000 blocks
   it took roughly a minute on a development machine, ending at about 230 MB of database and 0.5 GB of RAM.
   The database grows with the chain.
 - `CACHE_MB` in `.env` is the memory used for caching during the sync (default in `docker-compose.yml`: 1200).
-- The database is the `electrumx-db` volume. It is derived from the node, so it can be rebuilt at any time:
-  `docker compose down -v` deletes it and the next start syncs again. A backup is optional.
+- The data directory is `~/.plm-electrumx` (`ELECTRUMX_DATADIR`): `db/` is the database, `ssl/` the certificate.
+  The database is derived from the node, so it can be rebuilt at any time: stop the container, delete `db/` and start
+  again (it syncs again). A backup of it is optional; keep a backup of `ssl/`.
 - Disk: the node needs `txindex`, so budget for the node's own data too (see the node's README).
 
 ## Operation
@@ -214,5 +225,6 @@ From another machine, `nc -zv <public IP> 50001` must succeed if the server is m
 | `blockchain.outpoint.subscribe` or package broadcast return a daemon error | expected: Palladium Core is based on Bitcoin Core 0.19 and does not have these RPCs |
 | the server stays at an old height | the node is not synced; ElectrumX only follows the node |
 | clients cannot connect from outside | port not published/forwarded, firewall, or `SERVICES` does not list that protocol |
-| container restarts at once, log says `ERROR: ... SSL_CERTFILE` | your own certificate is not mounted or not readable by uid 1000, only one of `SSL_CERTFILE`/`SSL_KEYFILE` is set, or only one of the generated files exists in the `electrumx-ssl` volume |
-| a wallet refuses the server after it worked | the certificate changed (for example after `docker compose down -v`); the wallet saved the old one |
+| container stops at once, log says `ERROR: ... is not writable` | the data directory belongs to another user (or to root, if Docker created it): `chown -R $(id -u):$(id -g) ~/.plm-electrumx`, or set `PLM_UID`/`PLM_GID` |
+| container restarts at once, log says `ERROR: ... SSL_CERTFILE` | your own certificate is not mounted or not readable by uid 1000, only one of `SSL_CERTFILE`/`SSL_KEYFILE` is set, or only one of the generated files exists in `~/.plm-electrumx/ssl` |
+| a wallet refuses the server after it worked | the certificate changed (for example `ssl/` was deleted); the wallet saved the old one |

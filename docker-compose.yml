@@ -20,15 +20,15 @@ services:
     ports:
       - "${ELECTRUMX_TCP_PORT:-50001}:50001"
       - "${ELECTRUMX_SSL_PORT:-50002}:50002"
+    # data directory of the host (like ~/.palladium for the node): db/ is the database (can be rebuilt from the node),
+    # ssl/ the certificate (keep it, clients pin it). Create it first, see README.md
     volumes:
-      - electrumx-db:/var/lib/electrumx
-      - electrumx-ssl:/var/lib/electrumx-ssl   # the certificate: keep it, clients pin it
+      - ${ELECTRUMX_DATADIR:-~/.plm-electrumx}/db:/var/lib/electrumx
+      - ${ELECTRUMX_DATADIR:-~/.plm-electrumx}/ssl:/var/lib/electrumx-ssl
+    # owner of the data directory: PLM_UID/PLM_GID if it is not user 1000
+    user: "${PLM_UID:-1000}:${PLM_GID:-1000}"
     stop_grace_period: 2m   # lets the server flush the db on shutdown
     networks: [palladium]
-
-volumes:
-  electrumx-db:
-  electrumx-ssl:
 
 networks:
   palladium:

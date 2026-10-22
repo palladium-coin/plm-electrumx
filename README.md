@@ -24,12 +24,15 @@ as `palladiumd:2332`. RPC and ZMQ of the node are not published on the host, so 
    `server=1` and `txindex=1` (no `prune`).
 2. `cp .env.example .env` and set `PLM_RPC_USER` / `PLM_RPC_PASSWORD` to the RPC credentials of that file
    (use a dedicated `rpcauth` user for anything public).
-3. `docker compose up -d --build`
+3. Create the data directory as your user: `mkdir -p ~/.plm-electrumx/db ~/.plm-electrumx/ssl`
+   (`ELECTRUMX_DATADIR` in `.env` changes it). The container runs as uid/gid 1000; for another user set
+   `PLM_UID` / `PLM_GID` in `.env`.
+4. `docker compose up -d --build`
 
 The first start builds the database from the node from genesis, which takes a while; follow it with
-`docker compose logs -f electrumx`. The database is the `electrumx-db` volume. Electrum clients connect to
+`docker compose logs -f electrumx`. The data directory has `db/` (the database, rebuilt from the node if deleted) and `ssl/` (the certificate). Electrum clients connect to
 TCP port 50001 (`ELECTRUMX_TCP_PORT` in `.env`) and SSL port 50002 (`ELECTRUMX_SSL_PORT`). SSL is on by default:
-a self-signed certificate is generated on the first start, kept in the `electrumx-ssl` volume and reused on every
+a self-signed certificate is generated on the first start, kept in `~/.plm-electrumx/ssl` and reused on every
 later start (or use your own, see [DEPLOY.md](DEPLOY.md)). To announce a public server to the network, set
 `REPORT_SERVICES` in `.env`. Settings are in `.env` and `docker-compose.yml`; the image defaults are in the
 `Dockerfile`. Ports, firewall, SSL, RPC credentials and troubleshooting are in [DEPLOY.md](DEPLOY.md).

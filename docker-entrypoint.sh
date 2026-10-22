@@ -16,6 +16,13 @@ SSL_HOSTNAME="${SSL_HOSTNAME:-electrumx}"
 
 log() { echo "entrypoint: $*"; }
 
+for dir in "$DB_DIRECTORY" "$SSL_DIR"; do
+    if [ ! -w "$dir" ]; then
+        log "ERROR: $dir is not writable by uid $(id -u). Create the data directory on the host as that user, or set PLM_UID/PLM_GID (see README.md)." >&2
+        exit 1
+    fi
+done
+
 case "$SSL_ENABLED" in
     true|TRUE|True|1|yes|on)
         if [ -n "${SSL_CERTFILE:-}" ] || [ -n "${SSL_KEYFILE:-}" ]; then
