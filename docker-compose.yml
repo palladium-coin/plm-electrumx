@@ -11,15 +11,24 @@ services:
       CACHE_MB: ${CACHE_MB:-1200}
       # address announced to other servers and clients, if this server is public (tcp://host:50001)
       REPORT_SERVICES: ${REPORT_SERVICES:-}
+      # SSL: on by default, with a self-signed certificate generated on the first start (docker-entrypoint.sh)
+      SSL_ENABLED: ${SSL_ENABLED:-true}
+      SSL_HOSTNAME: ${SSL_HOSTNAME:-electrumx}
+      # your own certificate instead (paths inside the container, mount the files with an override file)
+      SSL_CERTFILE: ${SSL_CERTFILE:-}
+      SSL_KEYFILE: ${SSL_KEYFILE:-}
     ports:
       - "${ELECTRUMX_TCP_PORT:-50001}:50001"
+      - "${ELECTRUMX_SSL_PORT:-50002}:50002"
     volumes:
       - electrumx-db:/var/lib/electrumx
+      - electrumx-ssl:/var/lib/electrumx-ssl   # the certificate: keep it, clients pin it
     stop_grace_period: 2m   # lets the server flush the db on shutdown
     networks: [palladium]
 
 volumes:
   electrumx-db:
+  electrumx-ssl:
 
 networks:
   palladium:

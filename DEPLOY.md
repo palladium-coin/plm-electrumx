@@ -47,12 +47,12 @@ Keep `.env` private (`chmod 600 .env`); it is ignored by git.
 | Port | What | Open to | Notes |
 | --- | --- | --- | --- |
 | **50001/tcp** | Electrum protocol, plain | clients (internet, if the server is public) | published by `docker-compose.yml` |
-| **50002/tcp** | Electrum protocol over SSL | clients | optional, needs a certificate (see below); not published by default |
+| **50002/tcp** | Electrum protocol over SSL | clients | on by default, certificate generated automatically (see "SSL"); published by `docker-compose.yml` |
 | **2333/tcp** | Palladium P2P (the node) | the internet, inbound | published by the node's compose file |
 | 2332/tcp | node RPC | **only the `palladium` network** | never publish or forward it: it can spend wallet funds |
 | 28332, 28334, 28335/tcp | node ZMQ | only the `palladium` network | never publish or forward them |
 
-Changing the published port: `ELECTRUMX_TCP_PORT` in `.env` (host side only; the container always listens on 50001).
+Changing the published ports: `ELECTRUMX_TCP_PORT` / `ELECTRUMX_SSL_PORT` in `.env` (host side only; the container always listens on 50001).
 
 A server only for yourself (or for other containers) needs no open port: connect to `127.0.0.1:50001`, or join the
 `palladium` network and use `electrumx:50001`.
@@ -79,31 +79,85 @@ Never forward 2332 or 28332/28334/28335. A server on a VPS with a public IP open
 
 ## SSL (port 50002)
 
-Most Electrum wallets prefer SSL. You need a certificate and key for the host name of the server.
+SSL is **on by default** and needs nothing to be set up: Electrum wallets prefer it, and plain TCP (50001) sends
+addresses and balances unencrypted.
 
-1. Get a certificate, for example with Let's Encrypt (`certbot certonly --standalone -d electrum.example.com`),
-   or a self-signed one for tests:
-   ```bash
-   openssl req -x509 -newkey rsa:4096 -nodes -days 3650 -subj "/CN=electrum.example.com" \
-     -keyout privkey.pem -out fullchain.pem
-   ```
-2. Create `docker-compose.override.yml` next to `docker-compose.yml` (compose reads it automatically):
+### What happens at start
+
+`docker-entrypoint.sh` (the entrypoint of the image) does this at every start:
+
+1. If you gave your own certificate (`SSL_CERTFILE` and `SSL_KEYFILE`, see below), it uses that.
+2. Otherwise it looks for `/var/lib/electrumx-ssl/server.crt` and `server.key`, in the `electrumx-ssl` volume.
+   - **They exist: they are used as they are, never overwritten.**
+   - **They do not exist (first start): a self-signed certificate valid 10 years is generated** for `SSL_HOSTNAME`
+     and saved there. If only one of the two files exists, the container stops with an error instead of overwriting it.
+3. It prints the certificate subject, expiry date and SHA-256 fingerprint in the log
+   (`docker compose logs electrumx | grep entrypoint`), and warns if it expires in less than 30 days.
+4. If `SERVICES` is not set, it sets it to `tcp://:50001,ssl://:50002`.
+
+The compose file publishes 50002 (`ELECTRUMX_SSL_PORT`). Settings, all in `.env`:
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `SSL_ENABLED` | `true` | `false`: no SSL, only `tcp://:50001` |
+| `SSL_HOSTNAME` | `electrumx` | name (or IP) written in a generated certificate; set it to the name of the server (it matters only when the certificate is generated) |
+| `SSL_CERTFILE`, `SSL_KEYFILE` | unset | your own certificate and key (paths inside the container); both or neither |
+| `ELECTRUMX_SSL_PORT` | `50002` | host port published for SSL |
+
+### Self-signed certificate: what clients see
+
+A generated certificate is signed by nobody. Electrum wallets handle it by *trust on first use*: at the first connection
+the wallet saves the certificate, and from then on it refuses a different one (as SSH does with host keys), so a
+man-in-the-middle cannot take over later. The fields of the certificate (name, country, ...) are not checked by the
+client, only the expiry date. Consequences:
+
+- **Keep the certificate.** It is in the `electrumx-ssl` volume, separate from the database on purpose: the database
+  can be deleted and rebuilt at any time (`docker volume rm <project>_electrumx-db`), the certificate should not be.
+  `docker compose down -v` deletes **both** volumes, and after that a new certificate is generated and every client
+  that saved the old one refuses to connect.
+- **Back it up** while the container runs:
+  ```bash
+  docker compose cp electrumx:/var/lib/electrumx-ssl ./ssl-backup     # contains the private key: keep it private
+  ```
+  To restore it, put the two files somewhere on the host and use them as "your own certificate" below.
+- If it expires or is lost, clients that saved it must be told to forget it, or the server must get a new name.
+  Generated certificates last 10 years, so expiry is rarely the problem.
+- Whether a wallet accepts a self-signed certificate depends on the wallet. Electrum does (trust on first use);
+  check the wallet you intend to use.
+
+### Your own certificate (for example Let's Encrypt)
+
+With a certificate signed by a CA the client verifies it by itself, with no trust on first use, but it needs a domain
+and must be renewed (about every 90 days).
+
+1. Get the certificate and key (`certbot certonly --standalone -d electrum.example.com`).
+   Copy the files out of `/etc/letsencrypt/live/...` (they are symlinks into `archive/`) to a folder, and copy them
+   again after each renewal. The container runs as uid 1000, so the key must be readable by it
+   (`chown 1000 privkey.pem && chmod 600 privkey.pem`).
+2. Mount the folder with a `docker-compose.override.yml` next to `docker-compose.yml` (compose reads it automatically):
    ```yaml
    services:
      electrumx:
-       environment:
-         SERVICES: tcp://:50001,ssl://:50002
-         SSL_CERTFILE: /certs/fullchain.pem
-         SSL_KEYFILE: /certs/privkey.pem
-       ports:
-         - "50002:50002"
        volumes:
          - /path/to/certs:/certs:ro
    ```
-   The container runs as uid 1000: the key must be readable by it (`chown 1000 privkey.pem; chmod 600 privkey.pem`).
-   With Let's Encrypt, copy the files out of `/etc/letsencrypt/live/...` (they are symlinks into `archive/`), and
-   copy them again after each renewal.
-3. `docker compose up -d`, and open 50002 as in "Ports".
+3. In `.env`:
+   ```ini
+   SSL_CERTFILE=/certs/fullchain.pem
+   SSL_KEYFILE=/certs/privkey.pem
+   ```
+4. `docker compose up -d`. After a renewal, `docker compose restart electrumx` loads the new files.
+
+If the files cannot be read, the container stops with a message that says so (see `docker compose logs electrumx`).
+
+### Check it
+
+```bash
+echo | openssl s_client -connect 127.0.0.1:50002 2>/dev/null | openssl x509 -noout -subject -enddate -fingerprint -sha256
+printf '{"id":1,"method":"server.version","params":["test","1.4"]}\n' | openssl s_client -quiet -connect 127.0.0.1:50002
+```
+
+The fingerprint must be the one printed in the log. Open 50002 as in "Ports" for a public server.
 
 ## Announcing a public server
 
@@ -160,3 +214,5 @@ From another machine, `nc -zv <public IP> 50001` must succeed if the server is m
 | `blockchain.outpoint.subscribe` or package broadcast return a daemon error | expected: Palladium Core is based on Bitcoin Core 0.19 and does not have these RPCs |
 | the server stays at an old height | the node is not synced; ElectrumX only follows the node |
 | clients cannot connect from outside | port not published/forwarded, firewall, or `SERVICES` does not list that protocol |
+| container restarts at once, log says `ERROR: ... SSL_CERTFILE` | your own certificate is not mounted or not readable by uid 1000, only one of `SSL_CERTFILE`/`SSL_KEYFILE` is set, or only one of the generated files exists in the `electrumx-ssl` volume |
+| a wallet refuses the server after it worked | the certificate changed (for example after `docker compose down -v`); the wallet saved the old one |

@@ -28,7 +28,9 @@ as `palladiumd:2332`. RPC and ZMQ of the node are not published on the host, so 
 
 The first start builds the database from the node from genesis, which takes a while; follow it with
 `docker compose logs -f electrumx`. The database is the `electrumx-db` volume. Electrum clients connect to
-TCP port 50001 (`ELECTRUMX_TCP_PORT` in `.env`). To announce a public server to the network, set
+TCP port 50001 (`ELECTRUMX_TCP_PORT` in `.env`) and SSL port 50002 (`ELECTRUMX_SSL_PORT`). SSL is on by default:
+a self-signed certificate is generated on the first start, kept in the `electrumx-ssl` volume and reused on every
+later start (or use your own, see [DEPLOY.md](DEPLOY.md)). To announce a public server to the network, set
 `REPORT_SERVICES` in `.env`. Settings are in `.env` and `docker-compose.yml`; the image defaults are in the
 `Dockerfile`. Ports, firewall, SSL, RPC credentials and troubleshooting are in [DEPLOY.md](DEPLOY.md).
 
