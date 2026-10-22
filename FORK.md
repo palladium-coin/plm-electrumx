@@ -24,6 +24,13 @@ changes are made in the commits after it:
 Palladium changes are kept small and localized (mainly the `Palladium*` classes at the end of
 `src/electrumx/lib/coins.py`) to keep these merges easy.
 
+## Removed from upstream
+
+All other coins: their classes in `coins.py`, their transaction deserializers (`lib/tx.py`,
+`tx_dash.py`, `tx_axe.py`), the session/daemon/block-processor subclasses only they used, their
+tests and fixtures, and the altcoin pip extras. `Bitcoin` was folded into `Palladium`.
+When merging upstream, resolve modify/delete conflicts on these files by keeping them deleted.
+
 ## Palladium specifics
 
 - Palladium Core is based on Bitcoin Core 0.19. It has no `getindexinfo`, `txospenderindex` or

@@ -22,7 +22,7 @@ Features
   ElectrumX will failover round-robin style if the current one fails
   for any reason.
 - Peer discovery protocol removes need for IRC
-- Coin abstraction makes compatible altcoin and testnet support easy.
+- Coin abstraction makes testnet support easy.
 
 Implementation
 ==============

@@ -46,18 +46,6 @@ jobs:
           # e-x itself
           # - install both leveldb and rocksdb bindings
           pip install ".[leveldb,rocksdb]"
-          # hashes and other altcoin-specific stuff
-          pip install tribushashm
-          pip install blake256
-          pip install dash_hash
-          pip install git+https://github.com/bitcoinplusorg/x13-hash
-          pip install xevan_hash
-          pip install quark_hash
-          pip install groestlcoin_hash
-          pip install x16r_hash
-          pip install pycryptodomex
-          pip install git+https://github.com/Electra-project/nist5_hash
-          pip install x16rv2_hash
 
       - name: Run pytest
         run: pytest --cov=electrumx
