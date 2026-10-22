@@ -234,17 +234,6 @@ Once configured you may want to start ElectrumX at boot::
    :file:`.service` file.
 
 
-Installing on Raspberry Pi 3
-----------------------------
-
-To install on the Raspberry Pi 3 you will need to update to the
-``stretch`` distribution.  See the full procedure in
-`contrib/raspberrypi3/install_electrumx.sh`_.
-
-See also `contrib/raspberrypi3/run_electrumx.sh`_ for an easy way to
-configure and launch electrumx.
-
-
 Sync Progress
 =============
 
@@ -451,5 +440,3 @@ You can then set the port as follows and advertise the service externally on the
 .. _`daemontools`: http://cr.yp.to/daemontools.html
 .. _`runit`: http://smarden.org/runit/index.html
 .. _`aiohttp`: https://pypi.python.org/pypi/aiohttp
-.. _`contrib/raspberrypi3/install_electrumx.sh`: https://github.com/spesmilo/electrumx/blob/master/contrib/raspberrypi3/install_electrumx.sh
-.. _`contrib/raspberrypi3/run_electrumx.sh`: https://github.com/spesmilo/electrumx/blob/master/contrib/raspberrypi3/run_electrumx.sh
