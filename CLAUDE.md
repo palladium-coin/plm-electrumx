@@ -13,16 +13,19 @@ pip install -e ".[leveldb,rocksdb]"      # at least one DB engine extra is requi
 pip install pytest pytest-asyncio pytest-cov pycodestyle
 
 pytest                                   # all tests (what CI runs, with --cov=electrumx)
-pytest tests/lib/test_coins.py           # single file
+pytest tests/lib/test_palladium.py       # single file
 pytest tests/server/test_mempool.py::test_name   # single test
 pycodestyle --max-line-length=140 src    # the only lint, enforced in CI
 cd docs && make html                     # docs (Sphinx)
 
 DB_ENGINE=rocksdb DB_DIRECTORY=... DAEMON_URL=http://user:pass@host:port/ electrumx_server
-electrumx_rpc getinfo                    # talk to a running server via local RPC
+electrumx_rpc getinfo                    # needs rpc:// in SERVICES (the Docker image does not enable it)
+contrib/docker-smoke-test.sh             # after `docker build -t plm-electrumx .`: checks the SSL handling of the entrypoint
 ```
 
-Docker: `docker compose up -d --build` (root `Dockerfile`, `docker-compose.yml`, `.env` from `.env.example`) runs the server on the external `palladium` network of the Palladium node container, daemon at `palladiumd:2332`. `docker-entrypoint.sh` sets up SSL: it uses `SSL_CERTFILE`/`SSL_KEYFILE` if given, else the self-signed certificate in `ssl/` of the data directory (`~/.plm-electrumx`, bind-mounted), generating it only if missing (never overwrite it: clients pin it), and sets `SERVICES`.
+Docker: needs `.env` (copy `.env.example`; `PLM_RPC_USER`/`PLM_RPC_PASSWORD` are required, the rest has defaults) and the data directory created as your user first: `mkdir -p ~/.plm-electrumx/db ~/.plm-electrumx/ssl`. Then `docker compose up -d --build` (root `Dockerfile`, `docker-compose.yml`, `.env` from `.env.example`) runs the server on the external `palladium` network of the Palladium node container, daemon at `palladiumd:2332`. `docker-entrypoint.sh` sets up SSL: it uses `SSL_CERTFILE`/`SSL_KEYFILE` if given, else the self-signed certificate in `ssl/` of the data directory (`~/.plm-electrumx`, bind-mounted), generating it only if missing (never overwrite it: clients pin it), and sets `SERVICES`.
+
+Do not run Python with `src/electrumx/lib/` as the current directory: `lib/enum.py` shadows the standard `enum` module and breaks the interpreter.
 
 Configuration is entirely via environment variables, parsed in `src/electrumx/server/env.py` (documented in `docs/environment.rst`). `DB_ENGINE` is mandatory in 2.0 (`leveldb` or `rocksdb`). Python >=3.10; free-threaded 3.14t is experimental.
 
@@ -38,4 +41,13 @@ DB schema changed in 2.0 with no migration; changing on-disk format requires a f
 
 ## Tests
 
-`tests/lib` (Palladium params, addresses, hashes, scripts), `tests/server` (env, daemon, mempool, storage, API), plus fixture-driven `tests/test_blocks.py` / `test_transactions.py` using JSON files named `<coin>_<net>_<id>.json` in `tests/blocks` and `tests/transactions` (real mainnet data from a synced node; tx vout values in satoshis). `test_storage.py` needs both DB engines installed. Bech32 addresses are not supported by `Coin.address_to_hashX` (base58 only).
+`tests/lib` (Palladium params, addresses, hashes, scripts), `tests/server` (env, daemon, mempool, storage, API), plus fixture-driven `tests/test_blocks.py` / `test_transactions.py` using JSON files named `<coin>_<net>_<id>.json` in `tests/blocks` and `tests/transactions` (real mainnet data from a synced node; tx vout values in satoshis). `test_storage.py` needs both DB engines installed. Bech32 addresses are not supported by `Coin.address_to_hashX` (base58 only). Fixtures were taken from a synced node (`getblock <hash> 0|1`, `getrawtransaction <txid> true <blockhash>`, run via `docker compose exec palladiumd palladium-cli ...` in the node's project); vout values converted to satoshis. Ports, SSL, RPC credentials and donation address are documented in `DEPLOY.md`.
+
+## Repository and workflow
+
+- Default branch `main`, remotes `origin` (palladium-coin/plm-electrumx) and `upstream` (spesmilo/electrumx). With two remotes `gh` needs `--repo palladium-coin/plm-electrumx` (or `gh repo set-default`).
+- History is a snapshot of upstream commit `280cb33` plus Palladium commits: no common history, `git merge upstream` does not work. Update with `git diff 280cb33 upstream/master | git apply --3way` (see the "Fork notes" in `README.md`).
+- Do not create, move or delete git tags.
+- Do not `git add -A`: generated files (`.coverage`, `.env`) get swept in. Add files by name. `.coverage` and `.env` are in `.gitignore`.
+- CI (`.github/workflows/ci.yml`, on `main`): `unittests`, `pycodestyle`, `build_docs`, `docker` (builds the image, runs the smoke test). It runs on Ubuntu 24.04; `test_storage.py` fails with RocksDB 9.10 (Debian trixie) in teardown.
+- In repo documentation never cite paths or links of the palladiumcore repository; describe the concept (the Palladium node, the `palladium` Docker network).
