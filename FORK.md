@@ -5,24 +5,26 @@ Palladium (PLM), the coin of [palladiumcore](https://github.com/palladium-coin/p
 
 ## Starting point
 
-- Upstream commit: `280cb339aa158e099eb936033eecd15719770651`
-  ("Merge pull request #389 from SomberNight/202607_release_2_0", upstream release 2.0.0, 3 July 2026)
+The first commit of this repository is an unmodified snapshot of upstream
+[spesmilo/electrumx](https://github.com/spesmilo/electrumx) at commit
+`280cb339aa158e099eb936033eecd15719770651`
+("Merge pull request #389 from SomberNight/202607_release_2_0", upstream release 2.0.0, 3 July 2026).
+The upstream history itself is not included. All Palladium-specific changes are in the commits after it:
 
-Every commit up to and including that one is unmodified upstream history. All Palladium-specific
-changes are made in the commits after it:
-
-    git log 280cb33..main
+    git log --reverse
 
 ## Updating from upstream
 
-    git remote add upstream https://github.com/spesmilo/electrumx.git   # once
-    git config rerere.enabled true
-    git fetch upstream
-    git log main..upstream/master --oneline
-    git merge upstream/master
+There is no common git history with upstream, so `git merge` does not work. Apply the upstream
+changes since the snapshot as a patch instead:
 
-Palladium changes are kept small and localized (mainly the `Palladium*` classes at the end of
-`src/electrumx/lib/coins.py`) to keep these merges easy.
+    git remote add upstream https://github.com/spesmilo/electrumx.git   # once
+    git fetch upstream
+    git log 280cb33..upstream/master --oneline                          # what changed upstream
+    git diff 280cb33 upstream/master | git apply --3way
+
+Conflicts in files this fork deleted (see below) are resolved by keeping them deleted. After an update,
+replace `280cb33` above with the new upstream commit that was applied.
 
 ## Removed from upstream
 
