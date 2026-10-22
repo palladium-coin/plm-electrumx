@@ -1,31 +1,74 @@
-# ElectrumX - python electrum server
+# plm-electrumx
 
 ```
 Licence: MIT
 Original Author: Neil Booth
-Current Maintainers: The Electrum developers
+Upstream Maintainers: The Electrum developers
 Language: Python (>= 3.10)
 ```
 
-[![Latest PyPI package](https://badge.fury.io/py/e_x.svg)](https://pypi.org/project/e-x/)
-[![Build Status](https://github.com/spesmilo/electrumx/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/spesmilo/electrumx/actions/workflows/ci.yml)
+`plm-electrumx` is an [Electrum](https://electrum.org) protocol server for Palladium (PLM), the coin of
+[palladiumcore](https://github.com/palladium-coin/palladiumcore). It is a fork of
+[spesmilo/electrumx](https://github.com/spesmilo/electrumx) that supports Palladium only.
+It connects to your Palladium full node and indexes the blockchain, allowing efficient querying of
+the history of arbitrary addresses.
 
-This project is a fork of [kyuupichan/electrumx](https://github.com/kyuupichan/electrumx).
-The original author dropped support for Bitcoin, which we intend to keep.
+## Running
 
-ElectrumX allows users to run their own Electrum server. It connects to your
-full node and indexes the blockchain, allowing efficient querying of the history of
-arbitrary addresses. The server can be exposed publicly, and joined to the public network
-of servers via peer discovery. As of May 2020, a significant chunk of the public
-Electrum server network runs ElectrumX.
+Requirements: Python >= 3.10, a synced Palladium node with `server=1` and `txindex=1` (no pruning),
+and one of the DB engines (`pip install ".[leveldb]"` or `pip install ".[rocksdb]"`).
 
-### Documentation
+    pip install ".[rocksdb]"
+    DB_ENGINE=rocksdb DB_DIRECTORY=/path/to/db \
+    DAEMON_URL=http://rpcuser:rpcpassword@127.0.0.1:2332/ \
+    SERVICES=tcp://:50001 electrumx_server
 
-See [readthedocs](https://electrumx-spesmilo.readthedocs.io).
+`COIN` defaults to `Palladium` and `NET` to `mainnet` (`testnet` and `regtest` are also available).
+All settings are environment variables, documented in `docs/environment.rst`; `docs/HOWTO.rst`
+describes a full installation.
 
-### Releases
+## Fork notes
 
-Running from the latest git tag is always a safe bet, for which there are also releases on PyPI:
-```
-$ pip install e-x
-```
+### Starting point
+
+The first commit of this repository is an unmodified snapshot of upstream
+[spesmilo/electrumx](https://github.com/spesmilo/electrumx) at commit
+`280cb339aa158e099eb936033eecd15719770651`
+("Merge pull request #389 from SomberNight/202607_release_2_0", upstream release 2.0.0, 3 July 2026).
+The upstream history itself is not included. All Palladium-specific changes are in the commits after it:
+
+    git log --reverse
+
+### Updating from upstream
+
+There is no common git history with upstream, so `git merge` does not work. Apply the upstream
+changes since the snapshot as a patch instead:
+
+    git remote add upstream https://github.com/spesmilo/electrumx.git   # once
+    git fetch upstream
+    git log 280cb33..upstream/master --oneline                          # what changed upstream
+    git diff 280cb33 upstream/master | git apply --3way
+
+Conflicts in files this fork deleted (see below) are resolved by keeping them deleted. After an update,
+replace `280cb33` above with the new upstream commit that was applied.
+
+### Removed from upstream
+
+All other coins: their classes in `coins.py`, their transaction deserializers (`lib/tx.py`,
+`tx_dash.py`, `tx_axe.py`), the session/daemon/block-processor subclasses only they used, their
+tests and fixtures, and the altcoin pip extras. `Bitcoin` was folded into `Palladium`.
+When merging upstream, resolve modify/delete conflicts on these files by keeping them deleted.
+
+### Palladium specifics
+
+- Palladium Core is based on Bitcoin Core 0.19. It has no `getindexinfo`, `txospenderindex` or
+  `submitpackage`, so the daemon version/index checks are disabled for `COIN=Palladium`, and
+  `blockchain.outpoint.subscribe` and `blockchain.transaction.broadcast_package` return a daemon
+  error to clients.
+- The daemon must run with `txindex=1`.
+- Same genesis blocks as Bitcoin (mainnet, testnet3, regtest), 80-byte headers, sha256d PoW, segwit.
+- Parameters were taken from `src/chainparams.cpp` and `src/chainparamsbase.cpp` of palladiumcore.
+
+## License
+
+MIT, see `LICENCE`. The original copyright notices of ElectrumX are kept.
