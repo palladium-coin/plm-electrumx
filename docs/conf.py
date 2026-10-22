@@ -81,9 +81,9 @@ html_theme = 'alabaster'
 # documentation.
 #
 html_theme_options = {
-    'description': 'Lightweight Electrum Server in Python',
-    'github_user': 'spesmilo',
-    'github_repo': 'electrumx',
+    'description': 'Electrum server for Palladium (PLM)',
+    'github_user': 'palladium-coin',
+    'github_repo': 'plm-electrumx',
     'github_button': True,
     'github_type': 'star',
     'github_banner': True,

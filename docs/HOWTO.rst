@@ -23,15 +23,16 @@ DB Engine        A database engine package is required; two are
                  supported (see `Database Engine`_ below).
 ================ ========================
 
-You **must** be running a non-pruning bitcoin daemon with::
+You **must** be running a non-pruning Palladium daemon with::
 
+  server=1
   txindex=1
 
-set in its configuration file.  If you have an existing installation
-of bitcoind and have not previously set this you will need to reindex
-the blockchain with::
+set in its configuration file (:file:`palladium.conf`).  If you have an
+existing installation of palladiumd and have not previously set
+``txindex`` you will need to reindex the blockchain with::
 
-  bitcoind -reindex
+  palladiumd -reindex
 
 which can take some time.
 
@@ -47,11 +48,10 @@ used to either.
 When building the database from the genesis block, ElectrumX has to
 flush large quantities of data to disk and its DB.  You will have a
 better experience if the database directory is on an SSD than on an
-HDD.  Currently to around height 611,600 of the Bitcoin blockchain the
-final size of the leveldb database, and other ElectrumX file metadata
-comes to just over 46.9GB (43.7 GiB).  LevelDB needs a bit more for
-brief periods, and the block chain is only getting longer, so I would
-recommend having at least 70-80GB of free space before starting.
+HDD.  At around height 542,000 of the Palladium blockchain the final
+size of a RocksDB database, and other ElectrumX file metadata, is
+roughly 230 MB.  The block chain only gets longer, so leave some room to
+grow; a few GB of free space is plenty for now.
 
 Database Engine
 ===============
@@ -87,8 +87,8 @@ Install the prerequisites above.
 
 Check out the code from Github::
 
-    git clone https://github.com/spesmilo/electrumx.git
-    cd electrumx
+    git clone https://github.com/palladium-coin/plm-electrumx.git
+    cd plm-electrumx
 
 You can install with::
 
@@ -251,30 +251,9 @@ has its caches and disk I/O tuned to that task only.
 The :envvar:`CACHE_MB` environment variable controls the total cache
 size ElectrumX uses; see :ref:`here <CACHE>` for caveats.
 
-Here is my experience with the codebase of early 2017 (the current
-codebase is faster), to given heights and rough wall-time.  The period
-from heights 363,000 to 378,000 is the most sluggish::
-
-                 Machine A     Machine B
-  181,000          25m 00s      5m 30s
-  283,500                       1h 00m
-  321,800                       1h 40m
-  357,000          12h 32m      2h 41m
-  386,000          21h 56m      4h 25m
-  414,200       1d 12h 29m      6h 30m
-  447,168       2d 13h 20m      9h 47m
-
-*Machine A*: a low-spec 2011 1.6GHz AMD E-350 dual-core fanless CPU,
-8GB RAM and a DragonFlyBSD UFS filesystem on an SSD.  It requests
-blocks over the LAN from a bitcoind on machine B.  :envvar:`DB_CACHE`
-the default of 1,200.  LevelDB.
-
-*Machine B*: a late 2012 iMac running Sierra 10.12.2, 2.9GHz quad-core
-Intel i5 CPU with an HDD and 24GB RAM.  Running bitcoind on the same
-machine.  :envvar:`DB_CACHE` set to 1,800.  LevelDB.
-
-For chains other than bitcoin-mainnet synchronization should be much
-faster.
+On a development machine (12 cores, RocksDB) with the daemon on the same host, building the database from
+genesis to height 542,000 of the Palladium blockchain took about a minute.  Blocks are small and the chain is short,
+so synchronization is much faster than for large chains; times on other hardware will vary.
 
 .. note:: ElectrumX will not serve normal client connections until it
           has fully synchronized and caught up with your daemon.
@@ -316,8 +295,8 @@ You can see the status of a running service with::
     svstat ~/service/electrumx
 
 :command:`svscan` can of course handle multiple services
-simultaneously from the same service directory, such as a testnet or
-altcoin server.  See the man pages of these various commands for more
+simultaneously from the same service directory, such as a testnet
+server.  See the man pages of these various commands for more
 information.
 
 
@@ -330,53 +309,29 @@ You can see the logs usefully like so::
 
 Here is typical log output on startup::
 
-  INFO:BlockProcessor:switching current directory to /crucial/server-good
-  INFO:BlockProcessor:using leveldb for DB backend
-  INFO:BlockProcessor:created new database
-  INFO:BlockProcessor:creating metadata diretcory
-  INFO:BlockProcessor:software version: ElectrumX 0.10.2
-  INFO:BlockProcessor:DB version: 5
-  INFO:BlockProcessor:coin: Bitcoin
-  INFO:BlockProcessor:network: mainnet
-  INFO:BlockProcessor:height: -1
-  INFO:BlockProcessor:tip: 0000000000000000000000000000000000000000000000000000000000000000
-  INFO:BlockProcessor:tx count: 0
-  INFO:BlockProcessor:sync time so far: 0d 00h 00m 00s
-  INFO:BlockProcessor:reorg limit is 200 blocks
-  INFO:Daemon:daemon at 192.168.0.2:8332/
-  INFO:BlockProcessor:flushing DB cache at 1,200 MB
-  INFO:Controller:RPC server listening on localhost:8000
-  INFO:Prefetcher:catching up to daemon height 447,187...
+  INFO:Controller:software version: plm-electrumx 1.0.0
+  INFO:Controller:aiorpcX version: 0.25.0
+  INFO:Controller:supported protocol versions: 1.4-1.7.0
+  INFO:Controller:reorg limit is 200 blocks
+  INFO:Daemon:daemon #1 at 127.0.0.1:2332/ (current)
+  INFO:DB:switching current directory to /var/lib/electrumx
+  INFO:DB:using rocksdb for DB backend
+  INFO:DB:created new database
+  INFO:DB:coin: Palladium
+  INFO:DB:network: mainnet
+  INFO:DB:height: -1
+  INFO:DB:tx count: 0
+  INFO:DB:flushing DB cache at 1,200 MB
+  INFO:Prefetcher:catching up to daemon height 542,044 (542,045 blocks behind)
   INFO:Prefetcher:verified genesis block with hash 000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
-  INFO:BlockProcessor:our height: 9 daemon: 447,187 UTXOs 0MB hist 0MB
-  INFO:BlockProcessor:our height: 52,509 daemon: 447,187 UTXOs 9MB hist 14MB
-  INFO:BlockProcessor:our height: 85,009 daemon: 447,187 UTXOs 12MB hist 31MB
-  INFO:BlockProcessor:our height: 102,384 daemon: 447,187 UTXOs 15MB hist 47MB
+  INFO:BlockProcessor:our height: 9 daemon: 542,044 UTXOs 0MB hist 0MB
   [...]
-  INFO:BlockProcessor:our height: 133,375 daemon: 447,187 UTXOs 80MB hist 222MB
-  INFO:BlockProcessor:our height: 134,692 daemon: 447,187 UTXOs 96MB hist 250MB
-  INFO:BlockProcessor:flushed to FS in 0.7s
-  INFO:BlockProcessor:flushed history in 16.3s for 1,124,512 addrs
-  INFO:BlockProcessor:flush #1 took 18.7s.  Height 134,692 txs: 941,963
-  INFO:BlockProcessor:tx/sec since genesis: 2,399, since last flush: 2,400
-  INFO:BlockProcessor:sync time: 0d 00h 06m 32s  ETA: 1d 13h 03m 42s
+  INFO:BlockProcessor:caught up to height 542047
+  INFO:BlockProcessor:plm-electrumx 1.0.0 synced to height 542,047
 
-Under normal operation these cache stats repeat once or twice a
-minute.  UTXO flushes can take several minutes and look like this::
-
-  INFO:BlockProcessor:our height: 378,745 daemon: 447,332 UTXOs 1,013MB hist 184MB
-  INFO:BlockProcessor:our height: 378,787 daemon: 447,332 UTXOs 1,014MB hist 194MB
-  INFO:BlockProcessor:flushed to FS in 0.3s
-  INFO:BlockProcessor:flushed history in 13.4s for 934,933 addrs
-  INFO:BlockProcessor:flushed 6,403 blocks with 5,879,440 txs, 2,920,524 UTXO adds, 3,646,572 spends in 93.1s, committing...
-  INFO:BlockProcessor:flush #120 took 226.4s.  Height 378,787 txs: 87,695,588
-  INFO:BlockProcessor:tx/sec since genesis: 1,280, since last flush: 359
-  INFO:BlockProcessor:sync t ime: 0d 19h 01m 06s  ETA: 3d 21h 17m 52s
-  INFO:BlockProcessor:our height: 378,812 daemon: 447,334 UTXOs 10MB hist 10MB
-
-The ETA shown is just a rough guide and in the short term can be quite
-volatile.  It tends to be a little optimistic at first; once you get
-to height 280,000 is should be fairly accurate.
+While syncing, the ``our height`` lines repeat once or twice a minute with the
+sizes of the caches, which are flushed to disk when they reach :envvar:`CACHE_MB`.
+Once synced, the server follows new blocks and the mempool.
 
 .. _SSL certificates:
 
@@ -436,7 +391,7 @@ You can then set the port as follows and advertise the service externally on the
     REPORT_SSL_PORT=110
 
 
-.. _`contrib/systemd/electrumx.service`: https://github.com/spesmilo/electrumx/blob/master/contrib/systemd/electrumx.service
+.. _`contrib/systemd/electrumx.service`: https://github.com/palladium-coin/plm-electrumx/blob/main/contrib/systemd/electrumx.service
 .. _`daemontools`: http://cr.yp.to/daemontools.html
 .. _`runit`: http://smarden.org/runit/index.html
 .. _`aiohttp`: https://pypi.python.org/pypi/aiohttp

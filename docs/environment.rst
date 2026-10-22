@@ -111,7 +111,7 @@ Here are some examples of valid services::
   rpc://                                # RPC protocol, default host and port
 
 .. note:: ElectrumX will not serve any incoming connections until it has fully caught up
-          with your bitcoin daemon.  The only exception is local **RPC** connections,
+          with your Palladium daemon.  The only exception is local **RPC** connections,
           which are served at any time after the server has initialized.
 
 .. envvar:: SERVICES
@@ -268,8 +268,8 @@ These environment variables are optional:
   The maximum number of blocks to be able to handle in a chain
   reorganisation.  ElectrumX retains some fairly compact undo
   information for this many blocks in levelDB.  The default is a
-  function of :envvar:`COIN` and :envvar:`NET`; for Bitcoin mainnet it
-  is 200.
+  function of :envvar:`COIN` and :envvar:`NET`; for Palladium mainnet it
+  is 200 (8,000 on testnet and regtest).
 
 .. envvar:: EVENT_LOOP_POLICY
 
@@ -314,8 +314,7 @@ raise them.
 .. envvar:: MAX_SEND
 
   The maximum size of a response message to send over the wire, in
-  bytes.  Defaults to 8,100,000 (except for AuxPoW coins, which default
-  to 10,000,000).  Values smaller than 350,000 are taken as 350,000
+  bytes.  Defaults to 8,100,000.  Values smaller than 350,000 are taken as 350,000
   because standard Electrum protocol header "chunk" requests are almost
   that large.
 
@@ -506,5 +505,5 @@ your available physical RAM:
 
   I do not recommend raising this above 2000.
 
-.. _lib/coins.py: https://github.com/spesmilo/electrumx/blob/master/src/electrumx/lib/coins.py
+.. _lib/coins.py: https://github.com/palladium-coin/plm-electrumx/blob/main/src/electrumx/lib/coins.py
 .. _uvloop: https://pypi.python.org/pypi/uvloop

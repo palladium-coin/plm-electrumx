@@ -2,6 +2,27 @@
  ChangeLog
 ===========
 
+Version 1.0.0 (plm-electrumx)
+=============================
+
+First release of the Palladium fork. Based on a snapshot of upstream ElectrumX 2.0.0
+(commit ``280cb339aa158e099eb936033eecd15719770651``); the entries below this one are the history of upstream.
+
+* new: ``Palladium``, ``PalladiumTestnet`` and ``PalladiumRegtest`` coins, now the only ones (the default ``COIN``
+  is ``Palladium``).
+* Palladium Core is based on Bitcoin Core 0.19: the daemon version/index checks are disabled, ``txindex=1`` is
+  required, and ``blockchain.outpoint.subscribe`` / ``blockchain.transaction.broadcast_package`` return a daemon
+  error to clients.
+* removed: all other coins, their transaction deserializers, session/daemon/block processor classes, tests,
+  pip extras and ``contrib`` files.
+* new: ``Dockerfile`` and ``docker-compose.yml`` to run next to the Palladium node container, with automatic
+  self-signed SSL certificate, data in ``~/.plm-electrumx`` and ``DONATION_ADDRESS`` support.
+* new: CI on ``main`` with a Docker job; ``README.md`` and ``DEPLOY.md``.
+* changed: package name ``plm-electrumx``, own versioning.
+
+Upstream history
+================
+
 Version 2.0.0 (03 July 2026)
 ==============================
 

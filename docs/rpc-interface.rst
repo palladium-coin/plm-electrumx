@@ -69,10 +69,10 @@ A typical result is as follows (with annotated comments)::
 
   $ electrumx_rpc getinfo
   {
-      "coin": "Bitcoin",
-      "daemon": "127.0.0.1:9334/",
-      "daemon height": 572154,         # The daemon's height when last queried
-      "db height": 572154,             # The height to which the DB is flushed
+      "coin": "Palladium",
+      "daemon": "127.0.0.1:2332/",
+      "daemon height": 542048,         # The daemon's height when last queried
+      "db height": 542048,             # The height to which the DB is flushed
       "groups": 586,                   # The number of session groups
       "history cache": "185,014 lookups 9,756 hits 1,000 entries",
       "merkle cache": "280 lookups 54 hits 213 entries",
@@ -192,12 +192,12 @@ Peer data is obtained via a peer discovery protocol documented
 :ref:`here <Peer Discovery>`::
 
   $ electrumx_rpc peers
-  Host                           Status   TCP   SSL Server             Min  Max  Pruning   Last Good    Last Try Tries               Source IP Address
-  bch.tedy.pw                    good   50001 50002 ElectrumX 1.2.1    0.9  1.2          07h 29m 23s 07h 30m 40s     0                 peer 185.215.224.26
-  shsmithgoggryfbx.onion         good   60001 60002 ElectrumX 1.2.1    0.9  1.2          07h 30m 34s 07h 30m 38s     0                 peer
-  bccarihace4jdcnt.onion         good   52001 52002 ElectrumX 1.2.1    0.9  1.2          07h 30m 34s 07h 30m 39s     0                 peer
+  Host                           Status   TCP   SSL Server                  Min  Max  Pruning   Last Good    Last Try Tries               Source IP Address
+  electrum1.example.com          good   50001 50002 plm-electrumx 1.0.0     1.4  1.7          07h 29m 23s 07h 30m 40s     0                 peer 192.0.2.10
+  electrum2.example.com          good   50001 50002 plm-electrumx 1.0.0     1.4  1.7          07h 30m 34s 07h 30m 38s     0                 peer
   [...]
-  electroncash.checksum0.com     good   50001 50002 ElectrumX 1.2.1    0.9  1.1          07h 30m 40s 07h 30m 41s     0                 peer 149.56.198.233
+
+(The host names above are examples.)
 
 .. _query:
 
@@ -205,26 +205,25 @@ query
 -----
 
 Run a query of the UTXO and history databases against one or more
-addresses, hex scripts or ASCII names (for coins that have an index
-on names like Namecoin).  `--limit <N>` or `-l <N>` limits the output
+addresses or hex scripts.  `--limit <N>` or `-l <N>` limits the output
 for each kind to that many entries.  History is printed in blockchain
 order; UTXOs in an arbitrary order.
 
 For example::
 
-  $ electrumx_rpc query --limit 5 76a91462e907b15cbf27d5425399ebf6f0fb50ebb88f1888ac
-  Script: 76a91462e907b15cbf27d5425399ebf6f0fb50ebb88f1888ac
-  History #1: height 123,723 tx_hash 3387418aaddb4927209c5032f515aa442a6587d6e54677f08a03b8fa7789e688
-  History #2: height 127,280 tx_hash 4574958d135e66a53abf9c61950aba340e9e140be50efeea9456aa9f92bf40b5
-  History #3: height 127,909 tx_hash 8b960c87f9f1a6e6910e214fcf5f9c69b60319ba58a39c61f299548412f5a1c6
-  History #4: height 127,943 tx_hash 8f6b63012753005236b1b76e4884e4dee7415e05ab96604d353001662cde6b53
-  History #5: height 127,943 tx_hash 60ff2dfdf67917040139903a0141f7525a7d152365b371b35fd1cf83f1d7f704
-  UTXO #1: tx_hash 9aa497bf000b20f5ec5dc512bb6c1b60b68fc584d38b292b434e839ea8807bf0 tx_pos 0 height 254,148 value 5,500
-  UTXO #2: tx_hash 1c998142a5a5aae6f8c1eab245351413fe8d4032a3f14345f9943a0d0bc90ec0 tx_pos 0 height 254,161 value 5,500
-  UTXO #3: tx_hash 53345491b4829140be53f30079c6e4556a18545343b122900ebbfa158f9ca97a tx_pos 0 height 254,163 value 5,500
-  UTXO #4: tx_hash c71ad947ac46af217da3cd5521113cbd03e36ddada2b4452afe6c15f944d2529 tx_pos 0 height 372,916 value 1,000
-  UTXO #5: tx_hash c944a6acac054275a5e294e746d9ce79f6dcae91f3b4f5a84561aee6404a55b3 tx_pos 0 height 254,148 value 5,500
-  Balance: 17.8983303 BCH
+  $ electrumx_rpc query --limit 5 76a91405d230d91166fa0e82b9142e66172846855e469a88ac
+  Script: 76a91405d230d91166fa0e82b9142e66172846855e469a88ac
+  History #0: height 28,227 txid 021bd9352ba2c0e8847f642753b0dea07db9fc76a991b154c8806b528280a1dc
+  History #1: height 28,234 txid c7da889fdf7686a6f2f8a79ca1275b05b08f0d2f9051c85d1c2c70c0949ae025
+  History #2: height 28,242 txid b940e1d63caf8b73562705df6bdf1f4c2e2ef47df5be46483c7ba4fd02fc7f66
+  History #3: height 28,339 txid dd844c6838b9dfd18619dbf2816f22249c063755afaeaf67ed1e1118ad662616
+  History #4: height 28,368 txid 0d95947d605984d6d1d32bc252af398a18e218fe4a7625c1496f88abd4a8a07e
+  UTXO #1: txid 407a1be25f9962e83d1734fbf9773094428c77f835276cf965eef9f9778770c1 tx_pos 2 height 130,276 value 250,000,000
+  UTXO #2: txid 0cd05022306e2cfdf30f1def563cb6fa2b5e0d13896da9531ce93c86296d8855 tx_pos 1 height 130,286 value 100,000,000
+  UTXO #3: txid 6b172cf9477aec19198b89fa53600cfdb27ed0dd6d6c945ced5e0f02daa673fb tx_pos 1 height 130,359 value 300,000,000
+  UTXO #4: txid b8a9992d63fa185c410f9d6855c39bc4afc0002b81b21a29c947aeac6f5b6428 tx_pos 0 height 130,447 value 250,000,000
+  UTXO #5: txid 3cb0f3f21c8aad26293dd0228595c4f0f1c0e1f2863e756bb2d994e0fe2ba6a8 tx_pos 1 height 130,501 value 100,000,000
+  Balance: 16.500000 PLM
 
 reorg
 -----

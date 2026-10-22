@@ -2,11 +2,8 @@ Features
 ========
 
 - Efficient, lightweight reimplementation of electrum-server
-- Fast synchronization of bitcoin mainnet from Genesis.  Recent
-  hardware should synchronize in well under 24 hours.  The fastest
-  time to height 448k (mid January 2017) reported is under 4h 30m.  On
-  the same hardware JElectrum would take around 4 days and
-  electrum-server probably around 1 month.
+- Fast synchronization of Palladium mainnet from Genesis: about a
+  minute to height 542k on a modern development machine with RocksDB.
 - Various configurable means of controlling resource consumption and
   handling bad clients and denial of service attacks.  These include
   maximum connection counts, subscription limits per-connection and
