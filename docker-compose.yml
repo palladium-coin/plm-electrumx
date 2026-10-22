@@ -1,0 +1,27 @@
+# ElectrumX for Palladium, next to the node of palladiumcore/docker.
+# Start the node first: it creates the "palladium" network. Setup and usage: README.md
+services:
+  electrumx:
+    build: .
+    image: plm-electrumx
+    restart: unless-stopped
+    environment:
+      # the node is reached by name on the shared network; user and password are those of its palladium.conf
+      DAEMON_URL: http://${PLM_RPC_USER}:${PLM_RPC_PASSWORD}@palladiumd:2332/
+      CACHE_MB: ${CACHE_MB:-1200}
+      # address announced to other servers and clients, if this server is public (tcp://host:50001)
+      REPORT_SERVICES: ${REPORT_SERVICES:-}
+    ports:
+      - "${ELECTRUMX_TCP_PORT:-50001}:50001"
+    volumes:
+      - electrumx-db:/var/lib/electrumx
+    stop_grace_period: 2m   # lets the server flush the db on shutdown
+    networks: [palladium]
+
+volumes:
+  electrumx-db:
+
+networks:
+  palladium:
+    name: palladium
+    external: true

@@ -15,6 +15,26 @@ the history of arbitrary addresses.
 
 ## Running
 
+### With Docker (next to the node of palladiumcore)
+
+ElectrumX joins the `palladium` network created by the node in
+[palladiumcore/docker](https://github.com/palladium-coin/palladiumcore/tree/docker-node/docker) and reaches it
+as `palladiumd:2332`. RPC and ZMQ of the node are not published on the host, so nothing else is exposed.
+
+1. Start the node (`docker compose up -d` in `palladiumcore/docker`). Its `~/.palladium/palladium.conf` needs
+   `server=1` and `txindex=1` (no `prune`).
+2. `cp .env.example .env` and set `PLM_RPC_USER` / `PLM_RPC_PASSWORD` to the RPC credentials of that file
+   (use a dedicated `rpcauth` user for anything public).
+3. `docker compose up -d --build`
+
+The first start builds the database from the node from genesis, which takes a while; follow it with
+`docker compose logs -f electrumx`. The database is the `electrumx-db` volume. Electrum clients connect to
+TCP port 50001 (`ELECTRUMX_TCP_PORT` in `.env`). To announce a public server to the network, set
+`REPORT_SERVICES` in `.env`. Settings are in `.env` and `docker-compose.yml`; the image defaults are in the
+`Dockerfile`.
+
+### Without Docker
+
 Requirements: Python >= 3.10, a synced Palladium node with `server=1` and `txindex=1` (no pruning),
 and one of the DB engines (`pip install ".[leveldb]"` or `pip install ".[rocksdb]"`).
 

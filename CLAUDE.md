@@ -22,6 +22,8 @@ DB_ENGINE=rocksdb DB_DIRECTORY=... DAEMON_URL=http://user:pass@host:port/ electr
 electrumx_rpc getinfo                    # talk to a running server via local RPC
 ```
 
+Docker: `docker compose up -d --build` (root `Dockerfile`, `docker-compose.yml`, `.env` from `.env.example`) runs the server on the external `palladium` network of the node in palladiumcore/docker, daemon at `palladiumd:2332`.
+
 Configuration is entirely via environment variables, parsed in `src/electrumx/server/env.py` (documented in `docs/environment.rst`). `DB_ENGINE` is mandatory in 2.0 (`leveldb` or `rocksdb`). Python >=3.10; free-threaded 3.14t is experimental.
 
 ## Architecture
