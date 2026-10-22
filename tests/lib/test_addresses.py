@@ -29,7 +29,7 @@ import pytest
 import electrumx.lib.coins as coins
 
 addresses = [
-    # addresses and scripts from palladiumcore src/test/data/key_io_valid.json
+    # valid addresses and their scripts, from the Palladium Core test vectors
     (coins.Palladium, "PHrYiyUQTSekTWvVBNMEnSzV1DCB9TGR2P",
      "65a16059864a2fdbc7c99a4723a8395bc6f188eb", "0fae27c959f6b69f711a9e"),
     (coins.Palladium, "3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou",

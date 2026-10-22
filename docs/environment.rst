@@ -192,7 +192,7 @@ These environment variables are optional:
 .. envvar:: COIN
 
   Must be a :attr:`NAME` from one of the :class:`Coin` classes in
-  `lib/coins.py`_.  Defaults to ``Bitcoin``.
+  `lib/coins.py`_.  Defaults to ``Palladium``.
 
 .. envvar:: NET
 

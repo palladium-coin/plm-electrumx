@@ -8,20 +8,19 @@ Language: Python (>= 3.10)
 ```
 
 `plm-electrumx` is an [Electrum](https://electrum.org) protocol server for Palladium (PLM), the coin of
-[palladiumcore](https://github.com/palladium-coin/palladiumcore). It is a fork of
+Palladium Core. It is a fork of
 [spesmilo/electrumx](https://github.com/spesmilo/electrumx) that supports Palladium only.
 It connects to your Palladium full node and indexes the blockchain, allowing efficient querying of
 the history of arbitrary addresses.
 
 ## Running
 
-### With Docker (next to the node of palladiumcore)
+### With Docker (next to the Palladium node)
 
-ElectrumX joins the `palladium` network created by the node in
-[palladiumcore/docker](https://github.com/palladium-coin/palladiumcore/tree/docker-node/docker) and reaches it
+ElectrumX joins the Docker network `palladium`, created by the node's compose project, and reaches the node
 as `palladiumd:2332`. RPC and ZMQ of the node are not published on the host, so nothing else is exposed.
 
-1. Start the node (`docker compose up -d` in `palladiumcore/docker`). Its `~/.palladium/palladium.conf` needs
+1. Start the node (a compose service named `palladiumd` on the network `palladium`). Its `~/.palladium/palladium.conf` needs
    `server=1` and `txindex=1` (no `prune`).
 2. `cp .env.example .env` and set `PLM_RPC_USER` / `PLM_RPC_PASSWORD` to the RPC credentials of that file
    (use a dedicated `rpcauth` user for anything public).
@@ -31,7 +30,7 @@ The first start builds the database from the node from genesis, which takes a wh
 `docker compose logs -f electrumx`. The database is the `electrumx-db` volume. Electrum clients connect to
 TCP port 50001 (`ELECTRUMX_TCP_PORT` in `.env`). To announce a public server to the network, set
 `REPORT_SERVICES` in `.env`. Settings are in `.env` and `docker-compose.yml`; the image defaults are in the
-`Dockerfile`.
+`Dockerfile`. Ports, firewall, SSL, RPC credentials and troubleshooting are in [DEPLOY.md](DEPLOY.md).
 
 ### Without Docker
 
@@ -87,7 +86,7 @@ When merging upstream, resolve modify/delete conflicts on these files by keeping
   error to clients.
 - The daemon must run with `txindex=1`.
 - Same genesis blocks as Bitcoin (mainnet, testnet3, regtest), 80-byte headers, sha256d PoW, segwit.
-- Parameters were taken from `src/chainparams.cpp` and `src/chainparamsbase.cpp` of palladiumcore.
+- Parameters (address prefixes, ports, genesis hashes) were taken from the Palladium Core chain parameters.
 
 ## License
 

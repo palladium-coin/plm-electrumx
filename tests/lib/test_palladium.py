@@ -1,4 +1,4 @@
-# Tests of the Palladium coin classes (parameters from palladiumcore src/chainparams.cpp)
+# Tests of the Palladium coin classes (parameters of the Palladium Core chain params)
 
 import pytest
 

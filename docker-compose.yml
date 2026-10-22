@@ -1,4 +1,4 @@
-# ElectrumX for Palladium, next to the node of palladiumcore/docker.
+# ElectrumX for Palladium, next to the Palladium node container.
 # Start the node first: it creates the "palladium" network. Setup and usage: README.md
 services:
   electrumx:

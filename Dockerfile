@@ -2,7 +2,7 @@
 #
 #   docker compose up -d --build        (see docker-compose.yml and README.md)
 #
-# Runs on the "palladium" network of the node in palladiumcore/docker and reaches it as palladiumd:2332.
+# Runs on the "palladium" network of the Palladium node container and reaches it as palladiumd:2332.
 
 FROM python:3.14-trixie AS builder
 
