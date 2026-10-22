@@ -11,6 +11,8 @@ services:
       CACHE_MB: ${CACHE_MB:-1200}
       # address announced to other servers and clients, if this server is public (tcp://host:50001)
       REPORT_SERVICES: ${REPORT_SERVICES:-}
+      # donation address sent to the clients (server.donation_address); empty: none
+      DONATION_ADDRESS: ${DONATION_ADDRESS:-}
       # SSL: on by default, with a self-signed certificate generated on the first start (docker-entrypoint.sh)
       SSL_ENABLED: ${SSL_ENABLED:-true}
       SSL_HOSTNAME: ${SSL_HOSTNAME:-electrumx}

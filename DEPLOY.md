@@ -173,6 +173,22 @@ Peer discovery is on by default (`PEER_DISCOVERY`, `PEER_ANNOUNCE`). `lib/coins.
 servers you know there (format: `'host s t'`, for example `'electrum.example.com s50002 t50001'`) and rebuild, or
 keep the server private with `PEER_DISCOVERY=off` / `PEER_DISCOVERY=self`.
 
+## Donation address
+
+`DONATION_ADDRESS` in `.env` sets the address the server reports to its clients. It is optional and empty by default
+(no address).
+
+```ini
+DONATION_ADDRESS=plm1q...your address...
+```
+
+- Clients get it with the Electrum protocol call `server.donation_address`; wallets that support it show it to the user.
+- A banner file (`BANNER_FILE`, see `docs/environment.rst`) can contain the placeholder `$DONATION_ADDRESS`, which is
+  replaced with this address.
+- The server does **not** check the value, it only passes it on. Check it carefully (for example send a small test
+  amount) and use an address you are happy to make public, since it is sent to everyone who connects.
+- After changing it, apply it with `docker compose up -d` (the container is recreated with the new value).
+
 ## Data directory and first start
 
 Create the data directory as the user that runs Docker, before the first start (otherwise Docker creates it as root and
