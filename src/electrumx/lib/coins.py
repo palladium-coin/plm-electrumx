@@ -3810,3 +3810,57 @@ class FerriteTestnet(Ferrite):
         'enode2.ferritecoin.org s t',
         'enode3.ferritecoin.org s t',
     ]
+
+
+class Palladium(Bitcoin):
+    """Palladium (PLM), a Bitcoin Core 0.19-based chain. Standard 80-byte headers, sha256d PoW, segwit.
+
+    Its daemon predates 'txospenderindex', 'getindexinfo' and 'submitpackage', so
+    'blockchain.outpoint.subscribe' and 'blockchain.transaction.broadcast_package' will
+    return daemon errors to clients. The daemon needs 'txindex=1'.
+    """
+    NAME = "Palladium"
+    SHORTNAME = "PLM"
+    NET = "mainnet"
+    P2PKH_VERBYTE = bytes.fromhex("37")
+    P2SH_VERBYTES = (bytes.fromhex("05"),)
+    # same genesis block as Bitcoin mainnet
+    GENESIS_HASH = ('000000000019d6689c085ae165831e93'
+                    '4ff763ae46a2a6c172b3f1b60a8ce26f')
+    CRASH_CLIENT_VER = None
+    MIN_REQUIRED_DAEMON_VERSION = None
+    REQUIRED_DAEMON_INDEXES = tuple()
+    RPC_PORT = 2332
+    # snapshot (UpdateTip tx= count), only used for sync ETAs
+    TX_COUNT = 661_421
+    TX_COUNT_HEIGHT = 542_032
+    TX_PER_BLOCK = 2
+    PEERS = []
+
+    @classmethod
+    def warn_old_client_on_tx_broadcast(cls, client_ver):
+        return False
+
+
+class PalladiumTestnet(Palladium):
+    SHORTNAME = "TPLM"
+    NET = "testnet"
+    P2PKH_VERBYTE = bytes.fromhex("7f")
+    P2SH_VERBYTES = (bytes.fromhex("73"),)
+    # same genesis block as Bitcoin testnet3
+    GENESIS_HASH = ('000000000933ea01ad0ee984209779ba'
+                    'aec3ced90fa3f408719526f8d77f4943')
+    RPC_PORT = 12332
+    REORG_LIMIT = 8000
+    TX_COUNT = 1
+    TX_COUNT_HEIGHT = 1
+    TX_PER_BLOCK = 2
+    PEER_DEFAULT_PORTS = {'t': '51001', 's': '51002'}
+
+
+class PalladiumRegtest(PalladiumTestnet):
+    NET = "regtest"
+    # same genesis block as Bitcoin regtest
+    GENESIS_HASH = ('0f9188f13cb7b2c71f2a335e3a4fc328'
+                    'bf5beb436012afca590b1a11466e2206')
+    RPC_PORT = 28443

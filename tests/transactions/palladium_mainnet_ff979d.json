@@ -1,0 +1,67 @@
+{
+  "in_active_chain": true,
+  "txid": "ff979d27a50cef2d3ab3b7b9c3e9a197d90b082e661786c599d52735a574d992",
+  "hash": "57a74788a1e234744638908100a0bfc0f6cc454f549aaa5bab289472085686ec",
+  "version": 2,
+  "size": 394,
+  "vsize": 232,
+  "weight": 928,
+  "locktime": 340399,
+  "vin": [
+    {
+      "txid": "b2906dccdcb75f3b82a2647ec15899a43647645068db8f1ebc62bfeebdd712c4",
+      "vout": 1,
+      "scriptSig": {
+        "asm": "",
+        "hex": ""
+      },
+      "txinwitness": [
+        "30440220118e216522db6be050cd124666237e1ee1a2dc6aaf5ae83a121cee8be39ad29b022057ddef7cc7a4030e7aa38d4a5f2a60613a69ec56691a7295aabcaf149498409801",
+        "029f260826db88a97f621bfd795ac50a1c62f90369e00baec5ea95bfa38b7c9c29"
+      ],
+      "sequence": 4294967294
+    },
+    {
+      "txid": "44301af6524787f3736b3481ab4ee008bc12c7eb12ed1a2cb89291f73f3ec7e6",
+      "vout": 0,
+      "scriptSig": {
+        "asm": "001439a8c943cdd9ec6a85efbfbc2310fad38b871ba2",
+        "hex": "16001439a8c943cdd9ec6a85efbfbc2310fad38b871ba2"
+      },
+      "txinwitness": [
+        "304402206f90223aba2120fc9c3a111bea84f18f102fc524aed3dde3915fc6032eab471102207f23647c78c98530cd05ffda954cad70ac74e872663efa860028f75f98a49f0901",
+        "03231bbc7bb28380fecfd811eb9d9c6913d33d23e3a1161a61224b09557fa7a4e8"
+      ],
+      "sequence": 4294967294
+    }
+  ],
+  "vout": [
+    {
+      "value": 2146120,
+      "n": 0,
+      "scriptPubKey": {
+        "asm": "0 914315cbdffd547aace20f67bf193cbe901b8581",
+        "hex": "0014914315cbdffd547aace20f67bf193cbe901b8581",
+        "reqSigs": 1,
+        "type": "witness_v0_keyhash",
+        "addresses": [
+          "plm1qj9p3tj7ll4284t8zpanm7xfuh6gphpvpexqydh"
+        ]
+      }
+    },
+    {
+      "value": 2374960000,
+      "n": 1,
+      "scriptPubKey": {
+        "asm": "OP_HASH160 7b4c55ea8d558c26c282533cb3d76ff0d5c250a4 OP_EQUAL",
+        "hex": "a9147b4c55ea8d558c26c282533cb3d76ff0d5c250a487",
+        "reqSigs": 1,
+        "type": "scripthash",
+        "addresses": [
+          "3CvxV2hSBVV1ebrbog6HnF69fWQf6r9EGw"
+        ]
+      }
+    }
+  ],
+  "hex": "02000000000102c412d7bdeebf62bc1e8fdb6850644736a49958c17e64a2823b5fb7dccc6d90b20100000000feffffffe6c73e3ff79192b82c1aed12ebc712bc08e04eab81346b73f3874752f61a3044000000001716001439a8c943cdd9ec6a85efbfbc2310fad38b871ba2feffffff0248bf200000000000160014914315cbdffd547aace20f67bf193cbe901b858180038f8d0000000017a9147b4c55ea8d558c26c282533cb3d76ff0d5c250a487024730440220118e216522db6be050cd124666237e1ee1a2dc6aaf5ae83a121cee8be39ad29b022057ddef7cc7a4030e7aa38d4a5f2a60613a69ec56691a7295aabcaf14949840980121029f260826db88a97f621bfd795ac50a1c62f90369e00baec5ea95bfa38b7c9c290247304402206f90223aba2120fc9c3a111bea84f18f102fc524aed3dde3915fc6032eab471102207f23647c78c98530cd05ffda954cad70ac74e872663efa860028f75f98a49f09012103231bbc7bb28380fecfd811eb9d9c6913d33d23e3a1161a61224b09557fa7a4e8af310500"
+}

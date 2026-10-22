@@ -75,6 +75,15 @@ addresses = [
      "8687b01c03f47615226bdf54443f172d8eb523c6", "318a000ccf626685c8c213"),
     (coins.GravityZeroCoin, "GJPaFtL7ffbFPQKbPoLn2PvgajQ48QGo67",
      "05fc7b8c8ba198dedb4d14223aeb709436373d6b", "bd8fa7f0c7b50b023ac0c6"),
+    # addresses and scripts from palladiumcore src/test/data/key_io_valid.json
+    (coins.Palladium, "PHrYiyUQTSekTWvVBNMEnSzV1DCB9TGR2P",
+     "65a16059864a2fdbc7c99a4723a8395bc6f188eb", "0fae27c959f6b69f711a9e"),
+    (coins.Palladium, "3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou",
+     "74f209f6ea907e2ea48f74fae05782ae8a665257", "0ec76b02c1f59dcc3d8b6c"),
+    (coins.PalladiumTestnet, "tEZSNGVUiXapct4zsnZcfz9CfqKhmUqguv",
+     "53c0307d6851aa0ce7825ba883c6bd9ad242b486", "bec4c9c9872501d067633d"),
+    (coins.PalladiumTestnet, "oRvMM9SjaZ8LpnNkN7R8MLj5ZtADdTxKan",
+     "6349a418fc4578d10a372b54b45c280cc8c4382f", "272f0d99c753fb3af434aa"),
 ]
 
 
