@@ -22,7 +22,7 @@ from aiorpcx import run_in_thread, CancelledError, ignore_after
 import electrumx
 from electrumx.server.daemon import DaemonError, Daemon
 from electrumx.lib.hash import hash_to_hex_str, HASHX_LEN
-from electrumx.lib.script import is_unspendable_legacy, is_unspendable_genesis
+from electrumx.lib.script import is_unspendable_legacy
 from electrumx.lib.util import (
     chunks, class_logger, OldTaskGroup,
 )
@@ -526,9 +526,7 @@ class BlockProcessor:
         """This method must be thread-safe. (runs on bp.pool_executor)"""
 
         tx_num_start = self.db.tx_counts[height - 1] if height > 0 else 0
-        is_unspendable = (
-            is_unspendable_genesis if height >= self.coin.GENESIS_ACTIVATION
-            else is_unspendable_legacy)
+        is_unspendable = is_unspendable_legacy
 
         # Use local vars for speed in the loops
         script_hashX = self.coin.hashX_from_script
@@ -643,8 +641,6 @@ class BlockProcessor:
         assert self.state_lock.locked()
         self.db.assert_flushed(self.flush_data())
         assert self.height >= len(raw_blocks)
-        genesis_activation = self.coin.GENESIS_ACTIVATION
-
         coin = self.coin
         for raw_block in raw_blocks:
             # Check and update self.tip
@@ -656,9 +652,7 @@ class BlockProcessor:
                     f'{hash_to_hex_str(self.tip)} at height {self.height:,d}'
                 )
             self.tip = coin.header_prevhash_rev(block.header)
-            is_unspendable = (is_unspendable_genesis if self.height >= genesis_activation
-                              else is_unspendable_legacy)
-            self.backup_txs(block.transactions, is_unspendable)
+            self.backup_txs(block.transactions, is_unspendable_legacy)
             self._bhash_to_bheight[header_hash] = self.height
             self.height -= 1
             self.db.tx_counts.pop()

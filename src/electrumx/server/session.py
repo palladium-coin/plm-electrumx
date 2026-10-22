@@ -584,7 +584,7 @@ class SessionManager:
     async def rpc_add_peer(self, real_name: str) -> str:
         '''Add a peer.
 
-        real_name: "bch.electrumx.cash t50001 s50002" for example
+        real_name: "electrum.example.com t50001 s50002" for example
         '''
         await self.peer_mgr.add_localRPC_peer(real_name)
         return f"peer '{real_name}' added"
@@ -697,7 +697,7 @@ class SessionManager:
         return self.peer_mgr.rpc_data()
 
     async def rpc_query(self, items, limit):
-        '''Returns data about a script, address or name.'''
+        '''Returns data about a script or address.'''
         coin = self.env.coin
         db = self.db
         lines = []
@@ -715,14 +715,6 @@ class SessionManager:
                 lines.append(f'Address: {arg}')
                 return hashX
             except Base58Error:
-                pass
-
-            try:
-                script = coin.build_name_index_script(arg.encode("ascii"))
-                hashX = coin.name_hashX_from_script(script)
-                lines.append(f'Name: {arg}')
-                return hashX
-            except (AttributeError, UnicodeEncodeError):
                 pass
 
             return None

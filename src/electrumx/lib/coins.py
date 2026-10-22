@@ -63,7 +63,6 @@ class Coin:
     # Not sure if these are coin-specific
     RPC_URL_REGEX = re.compile('.+@(\\[[0-9a-fA-F:]+\\]|[^:]+)(:[0-9]+)?')
     VALUE_PER_COIN = 100000000
-    CHUNK_SIZE = 2016
     BASIC_HEADER_SIZE = 80
     STATIC_BLOCK_HEADERS = True
     SESSIONCLS = ElectrumX
@@ -72,11 +71,9 @@ class Coin:
     BLOCK_PROCESSOR = block_proc.BlockProcessor
     P2PKH_VERBYTE = bytes.fromhex("00")
     P2SH_VERBYTES = (bytes.fromhex("05"),)
-    ENCODE_CHECK = Base58.encode_check
     DECODE_CHECK = Base58.decode_check
     GENESIS_HASH = ('000000000019d6689c085ae165831e93'
                     '4ff763ae46a2a6c172b3f1b60a8ce26f')  # 'hum' byte-order
-    GENESIS_ACTIVATION = 100_000_000
 
     # max byte-size of single jsonrpc message
     # note: we should probably be able to serve a client asking for the largest consensus-valid tx.
@@ -188,9 +185,7 @@ class Coin:
         '''Return a pubkey script that pays to a pubkey hash.
 
         Pass the address (either P2PKH or P2SH) in base58 form.
-
-        note(ghost43): looks mainly needed for serving the altcoin Dash(Coin)'s "masternode.list" RPC.
-                       Barring that, we could rip out the whole base58 encoder/decoder.
+        Only used for the local RPC 'query' command (bech32 addresses are not supported).
         '''
         raw = cls.DECODE_CHECK(address)
 

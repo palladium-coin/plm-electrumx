@@ -77,33 +77,10 @@ def is_unspendable_legacy(script):
     return script[:2] == b'\x00\x6a' or (script and script[0] == 0x6a)
 
 
-def is_unspendable_genesis(script):
-    # OP_FALSE OP_RETURN
-    return script[:2] == b'\x00\x6a'
-
-
-def _match_ops(ops, pattern):
-    if len(ops) != len(pattern):
-        return False
-    for op, pop in zip(ops, pattern):
-        if pop != op:
-            # -1 means 'data push', whose op is an (op, data) tuple
-            if pop == -1 and isinstance(op, tuple):
-                continue
-            return False
-
-    return True
-
-
 class ScriptPubKey:
     '''A class for handling a tx output script that gives conditions
     necessary for spending.
     '''
-
-    TO_ADDRESS_OPS = (OpCodes.OP_DUP, OpCodes.OP_HASH160, -1,
-                      OpCodes.OP_EQUALVERIFY, OpCodes.OP_CHECKSIG)
-    TO_P2SH_OPS = (OpCodes.OP_HASH160, -1, OpCodes.OP_EQUAL)
-    TO_PUBKEY_OPS = (-1, OpCodes.OP_CHECKSIG)
 
     @classmethod
     def P2SH_script(cls, hash160):

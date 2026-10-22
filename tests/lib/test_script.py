@@ -1,17 +1,16 @@
 import pytest
 
-from electrumx.lib.script import OpCodes, is_unspendable_legacy, is_unspendable_genesis
+from electrumx.lib.script import OpCodes, is_unspendable_legacy
 
 
-@pytest.mark.parametrize("script, iug", (
-    (bytes([OpCodes.OP_RETURN]), False),
-    (bytes([OpCodes.OP_RETURN]) + bytes([2, 28, 50]), False),
-    (bytes([OpCodes.OP_0, OpCodes.OP_RETURN]), True),
-    (bytes([OpCodes.OP_0, OpCodes.OP_RETURN]) + bytes([2, 28, 50]), True)
+@pytest.mark.parametrize("script", (
+    bytes([OpCodes.OP_RETURN]),
+    bytes([OpCodes.OP_RETURN]) + bytes([2, 28, 50]),
+    bytes([OpCodes.OP_0, OpCodes.OP_RETURN]),
+    bytes([OpCodes.OP_0, OpCodes.OP_RETURN]) + bytes([2, 28, 50]),
 ))
-def test_op_return_legacy(script, iug):
+def test_op_return(script):
     assert is_unspendable_legacy(script)
-    assert is_unspendable_genesis(script) is iug
 
 
 @pytest.mark.parametrize("script", (
@@ -23,4 +22,3 @@ def test_op_return_legacy(script, iug):
 ))
 def test_not_op_return(script):
     assert not is_unspendable_legacy(script)
-    assert not is_unspendable_genesis(script)
