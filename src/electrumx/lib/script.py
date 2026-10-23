@@ -94,6 +94,11 @@ class ScriptPubKey:
                 + Script.push_data(hash160)
                 + bytes((OpCodes.OP_EQUALVERIFY, OpCodes.OP_CHECKSIG)))
 
+    @classmethod
+    def segwit_script(cls, witver, program):
+        '''The script of a segwit output: the version (OP_0, OP_1 ... OP_16) and the witness program.'''
+        return bytes((OpCodes.OP_0 if witver == 0 else OpCodes.OP_1 + witver - 1,)) + Script.push_data(program)
+
 
 class Script:
 

@@ -36,7 +36,7 @@ from hashlib import sha256
 from typing import Sequence, Optional, Type
 
 import electrumx.lib.util as util
-from electrumx.lib.hash import Base58, double_sha256, hash_to_hex_str, HASHX_LEN
+from electrumx.lib.hash import Base58, Bech32, double_sha256, hash_to_hex_str, HASHX_LEN
 from electrumx.lib.script import ScriptPubKey
 import electrumx.lib.tx as lib_tx
 from electrumx.lib.tx import Tx
@@ -72,6 +72,7 @@ class Coin:
     P2PKH_VERBYTE = bytes.fromhex("00")
     P2SH_VERBYTES = (bytes.fromhex("05"),)
     DECODE_CHECK = Base58.decode_check
+    BECH32_HRP: Optional[str] = None  # human-readable part of the segwit addresses
     GENESIS_HASH = ('000000000019d6689c085ae165831e93'
                     '4ff763ae46a2a6c172b3f1b60a8ce26f')  # 'hum' byte-order
 
@@ -184,9 +185,11 @@ class Coin:
     def pay_to_address_script(cls, address):
         '''Return a pubkey script that pays to a pubkey hash.
 
-        Pass the address (either P2PKH or P2SH) in base58 form.
-        Only used for the local RPC 'query' command (bech32 addresses are not supported).
+        Pass the address in base58 form (P2PKH or P2SH) or in bech32 form (segwit).
+        Only used for the local RPC 'query' command.
         '''
+        if cls.BECH32_HRP and address.lower().startswith(cls.BECH32_HRP + '1'):
+            return ScriptPubKey.segwit_script(*Bech32.decode_segwit(cls.BECH32_HRP, address))
         raw = cls.DECODE_CHECK(address)
 
         # Require version byte(s) plus hash160.
@@ -261,15 +264,17 @@ class Coin:
 
 
 class Palladium(Coin):
-    """Palladium (PLM), a Bitcoin Core 0.19-based chain. Standard 80-byte headers, sha256d PoW, segwit.
+    """Palladium (PLM). Standard 80-byte headers, sha256d PoW, segwit and taproot (scripts are indexed by hash,
+    so no special handling is needed for either).
 
-    Its daemon predates 'txospenderindex', 'getindexinfo' and 'submitpackage', so
+    Its daemon has no 'txospenderindex', 'getindexinfo' or 'submitpackage', so
     'blockchain.outpoint.subscribe' and 'blockchain.transaction.broadcast_package' will
     return daemon errors to clients. The daemon needs 'txindex=1'.
     """
     NAME = "Palladium"
     SHORTNAME = "PLM"
     NET = "mainnet"
+    BECH32_HRP = "plm"
     P2PKH_VERBYTE = bytes.fromhex("37")
     P2SH_VERBYTES = (bytes.fromhex("05"),)
     # same genesis block as Bitcoin mainnet
@@ -303,6 +308,7 @@ class Palladium(Coin):
 class PalladiumTestnet(Palladium):
     SHORTNAME = "TPLM"
     NET = "testnet"
+    BECH32_HRP = "tplm"
     P2PKH_VERBYTE = bytes.fromhex("7f")
     P2SH_VERBYTES = (bytes.fromhex("73"),)
     # same genesis block as Bitcoin testnet3
@@ -318,6 +324,7 @@ class PalladiumTestnet(Palladium):
 
 class PalladiumRegtest(PalladiumTestnet):
     NET = "regtest"
+    BECH32_HRP = "rplm"
     # same genesis block as Bitcoin regtest
     GENESIS_HASH = ('0f9188f13cb7b2c71f2a335e3a4fc328'
                     'bf5beb436012afca590b1a11466e2206')

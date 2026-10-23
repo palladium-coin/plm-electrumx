@@ -137,3 +137,78 @@ class Base58:
         into a Base58Check string."""
         be_bytes = payload + hash_fn(payload)[:4]
         return Base58.encode(be_bytes)
+
+
+class Bech32Error(Exception):
+    '''Exception used for Bech32 and Bech32m errors.'''
+
+
+class Bech32:
+    '''Decoding of segwit addresses, see BIP 173 (bech32) and BIP 350 (bech32m).'''
+
+    CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l'
+    BECH32_CONST = 1
+    BECH32M_CONST = 0x2bc830a3
+
+    @staticmethod
+    def _polymod(values):
+        gen = (0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3)
+        chk = 1
+        for value in values:
+            top = chk >> 25
+            chk = (chk & 0x1ffffff) << 5 ^ value
+            for i in range(5):
+                chk ^= gen[i] if (top >> i) & 1 else 0
+        return chk
+
+    @staticmethod
+    def _convert_bits(data, from_bits, to_bits):
+        '''General power-of-2 base conversion without padding. Returns None if the input is invalid.'''
+        acc = 0
+        bits = 0
+        ret = bytearray()
+        maxv = (1 << to_bits) - 1
+        for value in data:
+            acc = (acc << from_bits) | value
+            bits += from_bits
+            while bits >= to_bits:
+                bits -= to_bits
+                ret.append((acc >> bits) & maxv)
+        if bits >= from_bits or (acc << (to_bits - bits)) & maxv:
+            return None
+        return bytes(ret)
+
+    @staticmethod
+    def decode_segwit(hrp, address):
+        '''Decode a segwit address of the given human-readable part. Returns (witness version,
+        witness program) or raises Bech32Error.'''
+        if not isinstance(address, str):
+            raise TypeError('a string is required')
+        if any(ord(c) < 33 or ord(c) > 126 for c in address):
+            raise Bech32Error('invalid character in address')
+        if address.lower() != address and address.upper() != address:
+            raise Bech32Error('mixed case address')
+        address = address.lower()
+        pos = address.rfind('1')
+        if pos < 1 or pos + 7 > len(address) or len(address) > 90:
+            raise Bech32Error('invalid address length or separator position')
+        if address[:pos] != hrp:
+            raise Bech32Error(f'unexpected human-readable part "{address[:pos]}"')
+        data = [Bech32.CHARSET.find(c) for c in address[pos + 1:]]
+        if -1 in data:
+            raise Bech32Error('invalid bech32 character')
+        const = Bech32._polymod([ord(c) >> 5 for c in hrp] + [0] + [ord(c) & 31 for c in hrp] + data)
+        if const not in (Bech32.BECH32_CONST, Bech32.BECH32M_CONST):
+            raise Bech32Error('invalid bech32 checksum')
+        witver = data[0]
+        if witver > 16:
+            raise Bech32Error('invalid witness version')
+        # version 0 uses bech32, later versions use bech32m
+        if const != (Bech32.BECH32_CONST if witver == 0 else Bech32.BECH32M_CONST):
+            raise Bech32Error('checksum does not match the witness version')
+        program = Bech32._convert_bits(data[1:-6], 5, 8)
+        if program is None or not 2 <= len(program) <= 40:
+            raise Bech32Error('invalid witness program')
+        if witver == 0 and len(program) not in (20, 32):
+            raise Bech32Error('invalid witness program length for version 0')
+        return witver, program

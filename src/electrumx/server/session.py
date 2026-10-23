@@ -38,7 +38,7 @@ import electrumx
 import electrumx.lib.util as util
 from electrumx.lib.lrucache import LRUCache
 from electrumx.lib.util import OldTaskGroup, is_hex_str, get_running_loop
-from electrumx.lib.hash import (HASHX_LEN, Base58Error, hash_to_hex_str,
+from electrumx.lib.hash import (HASHX_LEN, Base58Error, Bech32Error, hash_to_hex_str,
                                 hex_str_to_hash, sha256, double_sha256)
 from electrumx.lib.merkle import MerkleCache
 from electrumx.lib.text import sessions_lines
@@ -714,7 +714,7 @@ class SessionManager:
                 hashX = coin.address_to_hashX(arg)
                 lines.append(f'Address: {arg}')
                 return hashX
-            except Base58Error:
+            except (Base58Error, Bech32Error):
                 pass
 
             return None
