@@ -262,6 +262,17 @@ async def test_mempool_info(daemon):
 
 
 @pytest.mark.asyncio
+async def test_mempool_info_incrementalfee_from_networkinfo(daemon):
+    # Palladium Core: getmempoolinfo has no 'incrementalrelayfee', getnetworkinfo has 'incrementalfee'
+    daemon.session = ClientSessionGood(
+        ('getmempoolinfo', [], {'mempoolminfee': 0.00001, 'minrelaytxfee': 0.00002, 'other': 'cruft'}),
+        ('getnetworkinfo', [], {'incrementalfee': 0.00003, 'other': 'cruft'}),
+    )
+    assert await daemon.mempool_info() == {
+        'mempoolminfee': 0.00001, 'minrelaytxfee': 0.00002, 'incrementalrelayfee': 0.00003}
+
+
+@pytest.mark.asyncio
 async def test_mempool_txids_hum(daemon):
     hashes = ['hex_hash1', 'hex_hash2']
     daemon.session = ClientSessionGood(('getrawmempool', [], hashes))

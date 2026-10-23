@@ -1876,6 +1876,11 @@ class ElectrumX(SessionBase):
         spk_hint: scriptPubKey corresponding to the outpoint. Might be used by
                   other servers, but we don't need and hence ignore it.
         '''
+        if not self.env.coin.DAEMON_HAS_TXO_SPENDER_INDEX:
+            # the status of a subscribed outpoint is re-checked with the daemon at every block: without
+            # support the subscription would be accepted now and then close the session
+            raise RPCError(BAD_REQUEST, 'outpoint subscriptions are not supported: the daemon cannot look up '
+                                        'the spender of an outpoint')
         txid_rev = assert_txid_hum(tx_hash)
         txout_idx = non_negative_integer(txout_idx)
         assert_hex_str(spk_hint)
@@ -2273,10 +2278,9 @@ class ElectrumX(SessionBase):
 
         response: list[dict] = []
         for orig_item in daemon_result:  # one item for each tx
-            new_item = {
-                "txid": orig_item["txid"],
-                "wtxid": orig_item["wtxid"],
-            }
+            new_item = {"txid": orig_item["txid"]}
+            if "wtxid" in orig_item:  # not reported by older daemons (Palladium Core)
+                new_item["wtxid"] = orig_item["wtxid"]
             # optional: "allowed" field
             if orig_item.get("allowed") in (True, False):
                 new_item["allowed"] = orig_item["allowed"]

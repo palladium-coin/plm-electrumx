@@ -100,6 +100,8 @@ class Coin:
     NET: str | None
     MIN_REQUIRED_DAEMON_VERSION: Optional[str] = None
     REQUIRED_DAEMON_INDEXES: Sequence[str] = tuple()
+    # whether the daemon can tell which tx spends an outpoint (gettxspendingprevout); needed to subscribe to outpoints
+    DAEMON_HAS_TXO_SPENDER_INDEX = True
 
     # only used for initial db sync ETAs:
     TX_COUNT_HEIGHT: int  # at a given snapshot of the chain,
@@ -268,8 +270,9 @@ class Palladium(Coin):
     so no special handling is needed for either).
 
     Its daemon has no 'txospenderindex', 'getindexinfo' or 'submitpackage', so
-    'blockchain.outpoint.subscribe' and 'blockchain.transaction.broadcast_package' will
-    return daemon errors to clients. The daemon needs 'txindex=1'.
+    'blockchain.outpoint.subscribe' is refused (DAEMON_HAS_TXO_SPENDER_INDEX) and
+    'blockchain.transaction.broadcast_package' will return a daemon error to clients.
+    The daemon needs 'txindex=1'.
     """
     NAME = "Palladium"
     SHORTNAME = "PLM"
@@ -282,6 +285,7 @@ class Palladium(Coin):
                     '4ff763ae46a2a6c172b3f1b60a8ce26f')
     MEMPOOL_HISTOGRAM_REFRESH_SECS = 120
     DESERIALIZER = lib_tx.DeserializerSegWit
+    DAEMON_HAS_TXO_SPENDER_INDEX = False
     RPC_PORT = 2332
     # snapshot (UpdateTip tx= count), only used for sync ETAs
     TX_COUNT = 661_421

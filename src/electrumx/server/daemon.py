@@ -336,6 +336,10 @@ class Daemon:
 
     async def mempool_info(self) -> dict[str, float]:
         mempool_info = await self.getmempoolinfo()
+        incrementalrelayfee = mempool_info.get('incrementalrelayfee')
+        if incrementalrelayfee is None:
+            # the Palladium daemon only reports it in getnetworkinfo, as 'incrementalfee'
+            incrementalrelayfee = (await self.getnetworkinfo())['incrementalfee']
         return {
             # Dynamic minimum fee rate in PLM/kvB for tx to be accepted.
             # Is the maximum of minrelaytxfee and minimum mempool fee
@@ -344,7 +348,7 @@ class Daemon:
             'minrelaytxfee': mempool_info['minrelaytxfee'],
             # Minimum fee rate increment for mempool limiting or replacement in PLM/kvB,
             # operator-configurable, static.
-            'incrementalrelayfee': mempool_info['incrementalrelayfee'],
+            'incrementalrelayfee': incrementalrelayfee,
         }
 
     async def getrawtransaction(self, txid_hum: str, verbose=False):

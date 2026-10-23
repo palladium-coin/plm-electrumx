@@ -46,6 +46,7 @@ def test_daemon_requirements_disabled():
     for coin, *_ in PARAMS:
         assert coin.MIN_REQUIRED_DAEMON_VERSION is None
         assert not coin.REQUIRED_DAEMON_INDEXES
+        assert coin.DAEMON_HAS_TXO_SPENDER_INDEX is False
 
 
 def bech32_encode_v0(hrp, program):
