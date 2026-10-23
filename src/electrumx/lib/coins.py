@@ -323,6 +323,7 @@ class PalladiumTestnet(Palladium):
 
 
 class PalladiumRegtest(PalladiumTestnet):
+    SHORTNAME = "RPLM"
     NET = "regtest"
     BECH32_HRP = "rplm"
     # same genesis block as Bitcoin regtest

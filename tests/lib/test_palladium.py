@@ -30,6 +30,11 @@ def test_chain_params(coin, net, rpc_port, p2pkh, p2sh, genesis):
     assert coin.DESERIALIZER is lib_tx.DeserializerSegWit
 
 
+@pytest.mark.parametrize("coin,shortname", [(Palladium, "PLM"), (PalladiumTestnet, "TPLM"), (PalladiumRegtest, "RPLM")])
+def test_shortname(coin, shortname):
+    assert coin.SHORTNAME == shortname
+
+
 @pytest.mark.parametrize("coin,net", [(c, n) for c, n, *_ in PARAMS])
 def test_lookup_coin_class(coin, net):
     assert Coin.lookup_coin_class("Palladium", net) is coin
