@@ -238,7 +238,8 @@ From another machine, `nc -zv <public IP> 50001` must succeed if the server is m
 | log: connection refused / cannot connect to `palladiumd:2332` | the node is stopped or still starting; check that the node container is running |
 | log: `401`/authorization errors | wrong `PLM_RPC_USER` / `PLM_RPC_PASSWORD` in `.env`; the credentials must be the ones in the node's `palladium.conf` |
 | errors mentioning `txindex` | `txindex=1` is missing in `palladium.conf` (an index added later is built while the node runs, which takes time) |
-| `blockchain.outpoint.subscribe` is refused, or package broadcast returns a daemon error | expected: Palladium Core does not have the RPCs they need (`gettxspendingprevout`, `submitpackage`) |
+| `blockchain.outpoint.subscribe` or `blockchain.transaction.broadcast_package` return an error | expected: Palladium Core does not have the RPCs they need (`gettxspendingprevout`, `submitpackage`) |
+| a client is disconnected, log says `disconnected whilst throttled` or `closing session over res usage` | expected: the server limits the cost of the requests of each client and IP (for example listing the UTXOs of an address with thousands of outputs); raise `COST_SOFT_LIMIT` / `COST_HARD_LIMIT` for your own trusted clients (see `docs/environment.rst`) |
 | the server stays at an old height | the node is not synced; ElectrumX only follows the node |
 | clients cannot connect from outside | port not published/forwarded, firewall, or `SERVICES` does not list that protocol |
 | container stops at once, log says `ERROR: ... is not writable` | the data directory belongs to another user (or to root, if Docker created it): `chown -R $(id -u):$(id -g) ~/.plm-electrumx`, or set `PLM_UID`/`PLM_GID` |

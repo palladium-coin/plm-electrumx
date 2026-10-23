@@ -14,13 +14,15 @@ First release of the Palladium fork. Based on a snapshot of upstream ElectrumX 2
   bech32/bech32m decoder let ``electrumx_rpc query`` read ``plm1``, ``tplm1`` and ``rplm1`` addresses.
 * Palladium Core has no ``getindexinfo``, ``txospenderindex`` or ``submitpackage`` RPCs: the daemon version/index
   checks are disabled, ``txindex=1`` is required, ``blockchain.outpoint.subscribe`` is refused with an explicit
-  error (``Coin.DAEMON_HAS_TXO_SPENDER_INDEX``) and ``blockchain.transaction.broadcast_package`` returns the
-  daemon error to clients.
+  error (``Coin.DAEMON_HAS_TXO_SPENDER_INDEX``) and ``blockchain.transaction.broadcast_package`` returns an
+  explicit "not supported" error to clients.
 * fixed: ``mempool.get_info`` (protocol 1.6) failed with the Palladium daemon, whose ``getmempoolinfo`` has no
   ``incrementalrelayfee`` (it is read from ``getnetworkinfo``), and ``blockchain.transaction.testmempoolaccept``
   failed because the daemon does not report ``wtxid``.
 * new: integration tests (``tests/integration``) against a Palladium node in regtest mode, run in Docker, with
-  a ``integration`` job in CI.
+  an ``integration`` job in CI for LevelDB and RocksDB. They cover the protocol versions 1.4 to 1.7, SSL, reorgs and
+  the daemon limits.
+* new: a mainnet taproot transaction among the test fixtures.
 * removed: all other coins, their transaction deserializers, session/daemon/block processor classes, tests,
   pip extras and ``contrib`` files.
 * new: ``Dockerfile`` and ``docker-compose.yml`` to run next to the Palladium node container, with automatic

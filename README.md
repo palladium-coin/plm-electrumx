@@ -92,7 +92,7 @@ When merging upstream, resolve modify/delete conflicts on these files by keeping
 - Palladium Core has no `getindexinfo`, `txospenderindex` (`gettxspendingprevout`) or `submitpackage` RPCs,
   so the daemon version/index checks are disabled for `COIN=Palladium`, and
   `blockchain.outpoint.subscribe` is refused with an explicit error (`Coin.DAEMON_HAS_TXO_SPENDER_INDEX`)
-  and `blockchain.transaction.broadcast_package` returns the daemon error to clients.
+  and `blockchain.transaction.broadcast_package` returns an explicit error to clients.
 - The daemon must run with `txindex=1`.
 - Same genesis blocks as Bitcoin (mainnet, testnet3, regtest), 80-byte headers, sha256d PoW.
 - Parameters (address prefixes, ports, genesis hashes) were taken from the Palladium Core chain parameters.

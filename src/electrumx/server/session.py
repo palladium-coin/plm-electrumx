@@ -2240,6 +2240,8 @@ class ElectrumX(SessionBase):
             error, = e.args
             message = error['message']
             self.logger.info(f"error submitting package: {message}")
+            if error.get('code') == -32601:  # method not found
+                raise RPCError(BAD_REQUEST, 'the daemon does not support package submission (submitpackage)')
             raise RPCError(
                 BAD_REQUEST,
                 f'the tx package was rejected by network rules.\n\n{message}.',

@@ -271,7 +271,7 @@ class Palladium(Coin):
 
     Its daemon has no 'txospenderindex', 'getindexinfo' or 'submitpackage', so
     'blockchain.outpoint.subscribe' is refused (DAEMON_HAS_TXO_SPENDER_INDEX) and
-    'blockchain.transaction.broadcast_package' will return a daemon error to clients.
+    'blockchain.transaction.broadcast_package' returns an explicit error to clients.
     The daemon needs 'txindex=1'.
     """
     NAME = "Palladium"
@@ -288,8 +288,8 @@ class Palladium(Coin):
     DAEMON_HAS_TXO_SPENDER_INDEX = False
     RPC_PORT = 2332
     # snapshot (UpdateTip tx= count), only used for sync ETAs
-    TX_COUNT = 661_421
-    TX_COUNT_HEIGHT = 542_032
+    TX_COUNT = 662_327
+    TX_COUNT_HEIGHT = 542_786
     TX_PER_BLOCK = 2
     PEERS = []
 
