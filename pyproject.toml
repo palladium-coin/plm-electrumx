@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "plm-electrumx"
 authors = [
+    { name = "Davide Grilli" },
     { name = "The Electrum developers" },
 ]
 description = "Electrum protocol server for Palladium (PLM), a fork of ElectrumX"

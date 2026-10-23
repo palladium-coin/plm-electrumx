@@ -2,6 +2,7 @@
 
 ```
 Licence: MIT
+Maintainer (plm-electrumx): Davide Grilli
 Original Author: Neil Booth
 Upstream Maintainers: The Electrum developers
 Language: Python (>= 3.10)
