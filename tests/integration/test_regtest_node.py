@@ -16,10 +16,15 @@ def test_node_matches_coin_parameters(node):
 
 
 def test_address_prefixes_match_the_node(node, wallet):
-    '''A legacy (base58) address of the node's wallet maps to the hashX of its script'''
+    '''Legacy (base58) and segwit addresses of the node's wallet map to the hashX of its script'''
     address = node.call('getnewaddress', '', 'legacy', wallet=wallet)
     script = bytes.fromhex(node.call('getaddressinfo', address)['scriptPubKey'])
     assert PalladiumRegtest.address_to_hashX(address) == PalladiumRegtest.hashX_from_script(script)
+    # and so do the segwit addresses: bech32 v0 (hrp rplm), p2sh-segwit, and bech32m v1 (taproot)
+    for kind in ('bech32', 'p2sh-segwit', 'bech32m'):
+        address = node.call('getnewaddress', '', kind, wallet=wallet)
+        script = bytes.fromhex(node.call('getaddressinfo', address)['scriptPubKey'])
+        assert PalladiumRegtest.address_to_hashX(address) == PalladiumRegtest.hashX_from_script(script)
 
 
 @pytest.fixture
@@ -43,11 +48,12 @@ def test_server_syncs_and_follows_the_chain(node, wallet, electrumx, client):
     assert PalladiumRegtest.header_hash_rev(bytes.fromhex(header)) == bytes.fromhex(node.call('getbestblockhash'))[::-1]
 
 
-def test_balance_history_and_mempool(node, wallet, electrumx, client):
+@pytest.mark.parametrize('kind', ['legacy', 'p2sh-segwit', 'bech32', 'bech32m'])
+def test_balance_history_and_mempool(node, wallet, electrumx, client, kind):
     client.call('server.version', 'plm-integration-test', '1.4')
     miner = new_address(node, wallet)
     node.mine(1, miner)
-    target = node.call('getnewaddress', '', 'bech32', wallet=wallet)
+    target = node.call('getnewaddress', '', kind, wallet=wallet)
     sh = scripthash(node, target)
 
     # unconfirmed: seen in the server's mempool
