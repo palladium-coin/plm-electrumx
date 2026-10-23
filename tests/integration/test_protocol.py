@@ -1,7 +1,9 @@
 '''Electrum protocol methods per protocol version, daemon limits and reorgs, against the regtest node (see conftest.py).'''
 import pytest
 
-from tests.integration.conftest import ElectrumClient, new_address, scripthash, wait_for
+import ssl
+
+from tests.integration.conftest import SSL_SERVICE, ElectrumClient, new_address, scripthash, wait_for
 
 
 @pytest.fixture
@@ -60,7 +62,7 @@ def test_daemon_limits_are_reported_as_errors(client):
     '''The Palladium daemon has no submitpackage and no gettxspendingprevout: clients get an error.
     If a newer daemon gains them, update CLAUDE.md, README.md and DEPLOY.md and this test.'''
     negotiate(client, '1.7')
-    with pytest.raises(RuntimeError, match='rejected by network rules'):
+    with pytest.raises(RuntimeError, match='does not support package submission'):
         client.call('blockchain.transaction.broadcast_package', ['00'])
     # a subscription would be accepted for an outpoint in the mempool and then close the session at the next block
     with pytest.raises(RuntimeError, match='outpoint subscriptions are not supported'):
@@ -116,3 +118,17 @@ def test_reorg_replaces_blocks(node, wallet, electrumx, client):
              'the balance after the reorg')
     history = client.call('blockchain.scripthash.get_history', sh)
     assert [(h['tx_hash'], h['height']) for h in history] == [(txid, height)]
+
+
+def test_ssl_service(node, electrumx):
+    '''The SSL port serves the same protocol, with the certificate given by SSL_CERTFILE/SSL_KEYFILE'''
+    context = ssl.create_default_context(cafile=SSL_SERVICE['certfile'])
+    client = ElectrumClient(SSL_SERVICE['port'], context)
+    try:
+        assert negotiate(client, '1.4')[1] == '1.4'
+        assert client.call('blockchain.block.header', 0)
+    finally:
+        client.close()
+    # a client that does not trust the (self-signed) certificate refuses it
+    with pytest.raises(ssl.SSLCertVerificationError):
+        ElectrumClient(SSL_SERVICE['port'], ssl.create_default_context())

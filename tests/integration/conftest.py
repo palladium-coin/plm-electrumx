@@ -11,6 +11,7 @@ import base64
 import json
 import os
 import socket
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -100,8 +101,10 @@ def scripthash(node, address):
 class ElectrumClient:
     '''Newline-delimited JSON-RPC over TCP, one request at a time (notifications are skipped).'''
 
-    def __init__(self, port):
+    def __init__(self, port, ssl_context=None):
         self.sock = socket.create_connection(('127.0.0.1', port), timeout=30)
+        if ssl_context:
+            self.sock = ssl_context.wrap_socket(self.sock, server_hostname='localhost')
         self.file = self.sock.makefile('rwb')
         self.next_id = 0
 
@@ -122,6 +125,10 @@ class ElectrumClient:
         self.sock.close()
 
 
+# set by the electrumx fixture: the SSL port of the server under test and the certificate it presents
+SSL_SERVICE = {}
+
+
 def free_port():
     with socket.socket() as s:
         s.bind(('127.0.0.1', 0))
@@ -136,11 +143,19 @@ def electrumx(node, wallet):
     if node.call('getblockcount') < MIN_HEIGHT:
         node.mine(MIN_HEIGHT - node.call('getblockcount'), miner)
     port = free_port()
+    ssl_port = free_port()
     with tempfile.TemporaryDirectory() as db_dir:
+        certfile = os.path.join(db_dir, 'server.crt')
+        keyfile = os.path.join(db_dir, 'server.key')
+        subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1', '-subj', '/CN=localhost',
+                        '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1', '-keyout', keyfile, '-out', certfile],
+                       check=True, capture_output=True)
+        SSL_SERVICE.update(port=ssl_port, certfile=certfile)
         env = dict(os.environ,
                    COIN='Palladium', NET='regtest',
                    DB_ENGINE=os.environ.get('PLM_TEST_DB_ENGINE', 'leveldb'), DB_DIRECTORY=db_dir,
-                   DAEMON_URL=DAEMON_URL, SERVICES=f'tcp://127.0.0.1:{port}',
+                   DAEMON_URL=DAEMON_URL, SERVICES=f'tcp://127.0.0.1:{port},ssl://127.0.0.1:{ssl_port}',
+                   SSL_CERTFILE=certfile, SSL_KEYFILE=keyfile,
                    PEER_DISCOVERY='off', PEER_ANNOUNCE='', LOG_LEVEL='info')
         log = open(os.path.join(db_dir, 'electrumx.log'), 'w+')
         proc = subprocess.Popen([sys.executable, str(REPO_ROOT / 'electrumx_server')], cwd=REPO_ROOT, env=env,
