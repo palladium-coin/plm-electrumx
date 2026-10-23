@@ -63,7 +63,7 @@ class Daemon:
         self.urls = []
         self.set_url(url)
         # Limit concurrent RPC calls to this number.
-        # See DEFAULT_HTTP_WORKQUEUE in bitcoind, which is typically 16
+        # See DEFAULT_HTTP_WORKQUEUE in the daemon, which is typically 16
         self.workqueue_semaphore = asyncio.Semaphore(value=max_workqueue)
         self.init_retry = init_retry
         self.max_retry = max_retry
@@ -102,7 +102,7 @@ class Daemon:
         daemon_rev = ni_version % 100
         daemon_version = (daemon_major, daemon_minor, daemon_rev)
         if daemon_version < required_version:
-            raise RuntimeError(f"Bitcoin Core {daemon_version=} < {required_version=}.")
+            raise RuntimeError(f"Daemon version {daemon_version=} < {required_version=}.")
 
     async def check_daemon_indexes(self):
         assert self.session is not None and self.coin is not None, f"{self.session=}, {self.coin=}"
@@ -112,11 +112,11 @@ class Daemon:
         for req_index in self.coin.REQUIRED_DAEMON_INDEXES:
             if req_index not in index_info:
                 raise RuntimeError(
-                    f"bitcoind missing required index: {req_index}. "
-                    f"You should set {req_index}=1 in your bitcoin.conf config file, and reindex.")
+                    f"the daemon is missing required index: {req_index}. "
+                    f"You should set {req_index}=1 in the daemon's config file, and reindex.")
             if not index_info[req_index]["synced"]:
-                # Should we raise? Not raising allows syncing a fresh bitcoind and e-x "in parallel".
-                self.logger.warning(f"bitcoind required index {req_index!r} is still syncing!")
+                # Should we raise? Not raising allows syncing a fresh daemon and e-x "in parallel".
+                self.logger.warning(f"the daemon's required index {req_index!r} is still syncing!")
 
     def set_url(self, url: str) -> None:
         '''Set the URLS to the given list, and switch to the first one.'''
@@ -330,19 +330,19 @@ class Daemon:
     async def relayfee(self):
         """Same as getmempoolinfo['minrelaytxfee'].
         The minimum fee required for a transaction to be relayed on by the daemon to the
-        bitcoin network. Doesn't guarantee mempool acceptance."""
+        network. Doesn't guarantee mempool acceptance."""
         network_info = await self.getnetworkinfo()
         return network_info['relayfee']
 
     async def mempool_info(self) -> dict[str, float]:
         mempool_info = await self.getmempoolinfo()
         return {
-            # Dynamic minimum fee rate in BTC/kvB for tx to be accepted.
+            # Dynamic minimum fee rate in PLM/kvB for tx to be accepted.
             # Is the maximum of minrelaytxfee and minimum mempool fee
             'mempoolminfee': mempool_info['mempoolminfee'],
-            # Minimum relay fee for transactions in BTC/kvB, operator-configurable, static.
+            # Minimum relay fee for transactions in PLM/kvB, operator-configurable, static.
             'minrelaytxfee': mempool_info['minrelaytxfee'],
-            # Minimum fee rate increment for mempool limiting or replacement in BTC/kvB,
+            # Minimum fee rate increment for mempool limiting or replacement in PLM/kvB,
             # operator-configurable, static.
             'incrementalrelayfee': mempool_info['incrementalrelayfee'],
         }

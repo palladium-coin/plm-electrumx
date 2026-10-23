@@ -66,11 +66,11 @@ class MemPoolAPI(ABC):
 
     @abstractmethod
     async def height(self) -> int:
-        '''Query bitcoind for its height.'''
+        '''Query the daemon for its height.'''
 
     @abstractmethod
     def cached_height(self) -> Optional[int]:
-        '''Return the height of bitcoind the last time it was queried,
+        '''Return the height of the daemon the last time it was queried,
         for any reason, without actually querying it.
         '''
 
@@ -88,12 +88,12 @@ class MemPoolAPI(ABC):
 
     @abstractmethod
     async def mempool_txids_hum(self) -> Sequence[str]:
-        '''Query bitcoind for the txids of all transactions in its
+        '''Query the daemon for the txids of all transactions in its
         mempool, returned as a list.'''
 
     @abstractmethod
     async def raw_transactions(self, txids_hum: Iterable[str]) -> Sequence[bytes | None]:
-        '''Query bitcoind for the serialized raw transactions with the given
+        '''Query the daemon for the serialized raw transactions with the given
         txids.  Missing transactions are returned as None.
 
         txids_hum is an iterable of hexadecimal hash strings.'''
@@ -356,7 +356,7 @@ class MemPool:
                 prev_mempool_height = height
                 touched_hashxs = set()
                 touched_outpoints = set()
-            # poll bitcoind's whole mempool every few seconds; or instantly after the DB height changes
+            # poll the daemon's whole mempool every few seconds; or instantly after the DB height changes
             async with ignore_after(self.refresh_secs):
                 async with OldTaskGroup(wait=any) as group:
                     await group.spawn(self.api.db_height_changed())
@@ -408,7 +408,7 @@ class MemPool:
         t0 = time.monotonic()
         new_hashes = await run_in_thread(lambda: list(all_txids_rev.difference(txs)))
         if new_hashes:
-            # 2.1. fetch raw txs from bitcoin daemon
+            # 2.1. fetch raw txs from the daemon
             group = OldTaskGroup()
             for hashes in chunks(new_hashes, 200):
                 coro = self._fetch_raw_txs_and_utxos(
@@ -435,7 +435,7 @@ class MemPool:
                 # - some UTXOs we find in the DB=utxo_map (chainstate),
                 # - some we find in self.txs (our memool),
                 # - some we might only find in tx_map (among the candidates: consider long chain of unconfirmed txs)
-                # - some we might not find anywhere: if DB is corrupted or bitcoind gave inconsistent mempool, or other race
+                # - some we might not find anywhere: if DB is corrupted or the daemon gave inconsistent mempool, or other race
                 # In each iteration, we loop over tx_map and move accepted transactions from it to self.txs.
                 # In the worst degenerate case, this could be O(n^2). To avoid that, we topologically sort tx_map.
                 nonlocal tx_map, utxo_map

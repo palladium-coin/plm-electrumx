@@ -237,7 +237,7 @@ These environment variables are optional:
   + ``$DAEMON_VERSION`` is replaced with the daemon's version as a
     dot-separated string. For example ``0.12.1``.
   + ``$DAEMON_SUBVERSION`` is replaced with the daemon's user agent
-    string.  For example, ``/BitcoinUnlimited:0.12.1(EB16; AD4)/``.
+    string.  For example, ``/Palladium:2.0.0/``.
   + ``$DONATION_ADDRESS`` is replaced with the address from the
     :envvar:`DONATION_ADDRESS` environment variable.
 
@@ -306,7 +306,7 @@ raise them.
 .. envvar:: MAX_RECV
 
   The maximum size of an incoming message in bytes, the default is 1,000,000 bytes.
-  Note that the smallest sane/safe value for Bitcoin is ~800,100 bytes,
+  Note that the smallest sane/safe value for Palladium is ~800,100 bytes,
   as the largest standard tx can have a weight of 400K but the protocol hex-encodes that,
   plus there is a few bytes of protocol overhead. Setting this to lower than that
   would preclude clients from broadcasting txs that could propagate over the network.
@@ -329,7 +329,7 @@ raise them.
 
   Also note that the largest raw transaction you will be able to serve to a client is
   just under half of :envvar:`MAX_SEND`, as each raw byte becomes 2 hexadecimal
-  ASCII characters on the wire.  For Bitcoin, the consensus limit for tx size is
+  ASCII characters on the wire.  For Palladium, the consensus limit for tx size is
   4 M weight units, while the standardness (policy) limit is 400 K weight units.
   When serialized as bytes, 4 M weight units is 4 MB, and when encoded as hex that is 8 MB.
   The default was chosen so that such a tx could still be served.

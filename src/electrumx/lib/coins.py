@@ -77,7 +77,7 @@ class Coin:
 
     # max byte-size of single jsonrpc message
     # note: we should probably be able to serve a client asking for the largest consensus-valid tx.
-    #       For Bitcoin, that is 4 M weight units, i.e. 4 MB on the p2p wire.
+    #       For Palladium (segwit, as Bitcoin), that is 4 M weight units, i.e. 4 MB on the p2p wire.
     #       Double that due to our JSON-RPC hex-encoding, plus overhead, we need to send 8+ MB.
     #       When receiving from a client, e.g. to broadcast, such a tx would be non-standard anyway.
     DEFAULT_MAX_SEND = 8_100_000
@@ -244,7 +244,7 @@ class Coin:
         '''Return the number of standard coin units as a Decimal given a
         quantity of smallest units.
 
-        For example 1 BTC is returned for 100 million satoshis.
+        For example 1 PLM is returned for 100 million satoshis.
         '''
         return Decimal(value) / cls.VALUE_PER_COIN
 

@@ -278,7 +278,7 @@ class BlockProcessor:
             await self.reorg_chain()
         else:
             # It is probably possible but extremely rare that what
-            # bitcoind returns doesn't form a chain because it
+            # the daemon returns doesn't form a chain because it
             # reorg-ed the chain as it was processing the batched
             # block hash requests.  Should this happen it's simplest
             # just to reset the prefetcher and try again.

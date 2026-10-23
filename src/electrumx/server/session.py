@@ -892,7 +892,7 @@ class SessionManager:
         #       significantly reduces the size of the critical time window.
         #       We try to give the illusion of a consistent monolithic information-source to the client.
         #       Most protocol method handlers only use e-x's db and mempool to resolve requests,
-        #       the few that also query bitcoind need to implement their own logic to make sure
+        #       the few that also query the daemon need to implement their own logic to make sure
         #       the state they present is consistent with e-x's current db state.
         if not (bp_height == db_height == notif_height):
             raise ChainSyncError(message="DB/mempool still catching up with each other")
@@ -1598,15 +1598,15 @@ class ElectrumX(SessionBase):
     async def _calc_oc_txo_status(self, funder_txid_rev: bytes, txout_idx: int) -> 'TXOSpendStatus':
         """For an outpoint, returns its spend-status (ignoring mempool events).
 
-        Uses daemon (bitcoind) to find the spender_txhash, requiring "txospenderindex=1".
+        Uses the daemon to find the spender_txhash, requiring "txospenderindex=1".
         However, mempool events are ignored, as it would be difficult to distinguish block height 0 vs -1
-        using only the daemon. Instead, our own mempool data (as opposed to bitcoind's) can be used
+        using only the daemon. Instead, our own mempool data (as opposed to the daemon's) can be used
         separately to enrich the return value.
 
         Can raise RPCError.
         """
         funder_txid_hum = hash_to_hex_str(funder_txid_rev)
-        # 1. call bitcoind "getrawtransaction" to see if prevtx exists/is_mined
+        # 1. call the daemon "getrawtransaction" to see if prevtx exists/is_mined
         self.bump_cost(1)
         try:
             funder_item = await self.session_mgr.daemon.getrawtransaction(funder_txid_hum, verbose=True)  # verbose=int(1)
@@ -1633,7 +1633,7 @@ class ElectrumX(SessionBase):
         if len(vouts) <= txout_idx:
             return TXOSpendStatus(funder_height=None)  # txout_idx was out-of-bounds
         # by now we know the funding TXO existed in the chain. Let's see if it was spent.
-        # 2. call bitcoind "gettxspendingprevout"
+        # 2. call the daemon "gettxspendingprevout"
         self.bump_cost(1)
         try:
             spender_item = await self.session_mgr.daemon.gettxspendingprevout(funder_txid_hum, txout_idx)
@@ -1642,7 +1642,7 @@ class ElectrumX(SessionBase):
             self.logger.debug(f"gettxspendingprevout errored. txo={funder_txid_hum}:{txout_idx}. {error=}")
             raise RPCError(DAEMON_ERROR, f'daemon error: {error!r}') from None
         assert spender_item.get("txid") == funder_txid_hum, f"{spender_item.get('txid')=} != {funder_txid_hum=}"
-        # paranoia: check if funder tx got reorged while we were awaiting bitcoind RPC
+        # paranoia: check if funder tx got reorged while we were awaiting the daemon RPC
         if self.db.get_blockheight_from_blockhash(funder_bhash) is None:
             raise ReorgWhileProcessingRequest()
         spender_bhash = spender_item.get("blockhash")
@@ -1675,7 +1675,7 @@ class ElectrumX(SessionBase):
         """Can raise RPCError"""
         self.bump_cost(0.1)
         prevout = (prev_txid_rev, txout_idx)
-        # first, consider only on-chain mined events, and check cache first (to avoid bitcoind RPC calls)
+        # first, consider only on-chain mined events, and check cache first (to avoid daemon RPC calls)
         self.session_mgr.oc_txo_status_cache.num_lookups += 1
         try:
             oc_status = self.session_mgr.oc_txo_status_cache[prevout]
@@ -1880,7 +1880,7 @@ class ElectrumX(SessionBase):
         txout_idx = non_negative_integer(txout_idx)
         assert_hex_str(spk_hint)
         # calc status, update client-last-seen status.
-        # if we can't calc the status, as e.g. bitcoind errors, don't add the subscription
+        # if we can't calc the status, as e.g. the daemon errors, don't add the subscription
         spend_status = await self.txoutpoint_status_for_notif(txid_rev, txout_idx)
         db_chaintip = self.session_mgr.get_block_ref_for_chaintip()
         if max(spend_status.funder_height or 0, spend_status.spender_height or 0) > db_chaintip.height:
@@ -2040,7 +2040,7 @@ class ElectrumX(SessionBase):
 
     async def phandle_relayfee(self):
         """The minimum fee required for a transaction to be relayed on by the daemon to the
-        bitcoin network. Doesn't guarantee mempool acceptance."""
+        network. Doesn't guarantee mempool acceptance."""
         self.bump_cost(1.0)
         return await self.daemon_request('relayfee')
 
@@ -2048,9 +2048,9 @@ class ElectrumX(SessionBase):
         """
         mempool.get_info, introduced in protocol 1.6.
         returns: {
-            "mempoolminfee": BTC/kvB,
-            "minrelaytxfee": BTC/kvB,
-            "incrementalrelayfee": BTC/kvB,
+            "mempoolminfee": PLM/kvB,
+            "minrelaytxfee": PLM/kvB,
+            "incrementalrelayfee": PLM/kvB,
         }
         """
         self.bump_cost(1.0)
