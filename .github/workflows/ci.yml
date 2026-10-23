@@ -104,3 +104,38 @@ jobs:
 
       - name: Smoke test
         run: contrib/docker-smoke-test.sh plm-electrumx
+
+  integration:
+    # ElectrumX against a real Palladium node in regtest mode (tests/integration)
+    name: integration
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install system packages
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -yq libleveldb-dev
+
+      - name: Install Python deps
+        run: |
+          pip install pytest
+          pip install ".[leveldb]"
+
+      - name: Start the regtest node
+        run: docker compose -f tests/integration/docker-compose.yml up -d --build --wait
+
+      - name: Run integration tests
+        env:
+          PLM_TEST_DAEMON_URL: http://plmtest:plmtest@127.0.0.1:28443/
+        run: pytest tests/integration
+
+      - name: Node log
+        if: failure()
+        run: docker compose -f tests/integration/docker-compose.yml logs palladiumd | tail -100

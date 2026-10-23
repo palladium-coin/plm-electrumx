@@ -16,7 +16,13 @@ pytest                                   # all tests (what CI runs, with --cov=e
 pytest tests/lib/test_palladium.py       # single file
 pytest tests/server/test_mempool.py::test_name   # single test
 pycodestyle --max-line-length=140 src    # the only lint, enforced in CI
+
 cd docs && make html                     # docs (Sphinx)
+
+# integration tests: ElectrumX against a real Palladium regtest node in Docker (skipped unless PLM_TEST_DAEMON_URL is set)
+docker compose -f tests/integration/docker-compose.yml up -d --build --wait
+PLM_TEST_DAEMON_URL=http://plmtest:plmtest@127.0.0.1:28443/ pytest tests/integration
+docker compose -f tests/integration/docker-compose.yml down -v
 
 DB_ENGINE=rocksdb DB_DIRECTORY=... DAEMON_URL=http://user:pass@host:port/ electrumx_server
 electrumx_rpc getinfo                    # needs rpc:// in SERVICES (the Docker image does not enable it)
@@ -40,6 +46,8 @@ Daemon: Palladium Core is based on Bitcoin Core 0.19: no `getindexinfo`, `txospe
 DB schema changed in 2.0 with no migration; changing on-disk format requires a full resync.
 
 ## Tests
+
+Integration tests (`tests/integration`): `node/Dockerfile` + `node/palladium.conf` run the Palladium node (official release binaries, signature checked) in regtest, `conftest.py` starts `electrumx_server` on an empty DB against it and the tests mine blocks and check headers, balances, mempool, history, merkle proofs and broadcast through the Electrum protocol. Regtest coinbase maturity is 120 blocks, bech32 hrp is `rplm`. The CI job is `integration`. Bump `VERSION` in the Dockerfile to test against a newer node.
 
 `tests/lib` (Palladium params, addresses, hashes, scripts), `tests/server` (env, daemon, mempool, storage, API), plus fixture-driven `tests/test_blocks.py` / `test_transactions.py` using JSON files named `<coin>_<net>_<id>.json` in `tests/blocks` and `tests/transactions` (real mainnet data from a synced node; tx vout values in satoshis). `test_storage.py` needs both DB engines installed. Bech32 addresses are not supported by `Coin.address_to_hashX` (base58 only). Fixtures were taken from a synced node (`getblock <hash> 0|1`, `getrawtransaction <txid> true <blockhash>`, run via `docker compose exec palladiumd palladium-cli ...` in the node's project); vout values converted to satoshis. Ports, SSL, RPC credentials and donation address are documented in `DEPLOY.md`.
 

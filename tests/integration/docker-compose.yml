@@ -1,0 +1,17 @@
+# Palladium node in regtest mode for the integration tests (tests/integration). From the root of the repository:
+#
+#   docker compose -f tests/integration/docker-compose.yml up -d --build --wait
+#   pytest tests/integration
+#   docker compose -f tests/integration/docker-compose.yml down -v
+services:
+  palladiumd:
+    build: node
+    image: plm-test-node
+    # published on the loopback only
+    ports:
+      - "127.0.0.1:28443:28443"
+    healthcheck:
+      test: ["CMD", "palladium-cli", "-regtest", "-rpcuser=plmtest", "-rpcpassword=plmtest", "getblockcount"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
