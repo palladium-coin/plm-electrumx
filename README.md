@@ -52,6 +52,32 @@ and one of the DB engines (`pip install ".[leveldb]"` or `pip install ".[rocksdb
 All settings are environment variables, documented in `docs/environment.rst`; `docs/HOWTO.rst`
 describes a full installation.
 
+## Architectures (amd64 and ARM)
+
+The code is pure Python, the Docker images (server and integration-test node) pick the right binaries
+for the architecture (`TARGETARCH`, Debian packages), so amd64 and arm64 are both meant to work.
+
+Verified on aarch64 (Raspberry Pi, Debian 12, Docker 29):
+
+- the integration-test node image builds (official `aarch64-linux-gnu` release, signature checked);
+- `tests/integration` with LevelDB: 21 passed; unit tests (without `test_storage.py`): 181 passed; `pycodestyle` clean;
+- the server image builds, `contrib/docker-smoke-test.sh` passes and `rocksdb` imports inside it.
+
+Still to do or verify:
+
+- **RocksDB on ARM**: `tests/server/test_storage.py` and `tests/integration` with `PLM_TEST_DB_ENGINE=rocksdb`
+  were not run (they need `librocksdb-dev` and `pip install ".[rocksdb]"`; `rocksdb-ng` is compiled from source).
+- **Server image build without cache**: confirm that `rocksdb-ng` compiles on arm64 from scratch
+  (`docker build --no-cache -t plm-electrumx .`).
+- **A full sync** of the server image against a real Palladium node on ARM (speed, memory, `CACHE_MB`).
+- **amd64**: nothing was run on this machine, rely on the CI.
+- **CI**: add an ARM runner (`ubuntu-24.04-arm`) to the `unittests`, `integration` and `docker` jobs
+  of `.github/workflows/ci.yml`, so both architectures are tested on every push.
+- **Published image** (if any): build it multi-arch with
+  `docker buildx build --platform linux/amd64,linux/arm64`.
+- **Development on ARM**: `plyvel` needs `libleveldb-dev` to compile (`apt install libleveldb-dev`);
+  document it in `DEPLOY.md` if it is useful there.
+
 ## Fork notes
 
 ### Starting point
