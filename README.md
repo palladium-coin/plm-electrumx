@@ -61,12 +61,16 @@ Verified on aarch64 (Raspberry Pi, Debian 12, Docker 29):
 
 - the integration-test node image builds (official `aarch64-linux-gnu` release, signature checked);
 - `tests/integration` with LevelDB: 21 passed; unit tests (without `test_storage.py`): 181 passed; `pycodestyle` clean;
-- the server image builds, `contrib/docker-smoke-test.sh` passes and `rocksdb` imports inside it.
+- the server image builds, `contrib/docker-smoke-test.sh` passes and `rocksdb` imports inside it;
+- `tests/integration` with RocksDB 9.10 (`python:3.14-trixie` container): 21 passed;
+- the systemd unit in `contrib/systemd` starts, syncs a regtest chain, answers on the Electrum protocol and
+  `electrumx_rpc`, and stops cleanly through its `ExecStop`.
 
 Still to do or verify:
 
-- **RocksDB on ARM**: `tests/server/test_storage.py` and `tests/integration` with `PLM_TEST_DB_ENGINE=rocksdb`
-  were not run (they need `librocksdb-dev` and `pip install ".[rocksdb]"`; `rocksdb-ng` is compiled from source).
+- **RocksDB version**: `rocksdb-ng` needs RocksDB >= 8.0 and compiles from source; Debian 12 (7.8.3) is too old,
+  use Debian 13 or the Docker image. In `tests/server/test_storage.py` the 7 RocksDB tests error at teardown with
+  9.10 (the fixture does `os.chdir` before `db.close()` on a relative path), the same on ARM and amd64.
 - **Server image build without cache**: confirm that `rocksdb-ng` compiles on arm64 from scratch
   (`docker build --no-cache -t plm-electrumx .`).
 - **A full sync** of the server image against a real Palladium node on ARM (speed, memory, `CACHE_MB`).

@@ -8,6 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+Always run tests, lint and installs in a Python virtual environment (`python3 -m venv venv && . venv/bin/activate`;
+`/venv/` is in `.gitignore`), never with the system pip, also inside Docker containers used to run tests. RocksDB needs
+RocksDB >= 8.0 for `rocksdb-ng`: Debian 12 ships 7.8.3, so on it test RocksDB in a `python:3.14-trixie` container
+(RocksDB 9.10, set `ALLOW_ROOT=1` there because the server refuses to run as root).
+
 ```bash
 pip install -e ".[leveldb,rocksdb]"      # at least one DB engine extra is required
 pip install pytest pytest-asyncio pytest-cov pycodestyle
