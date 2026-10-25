@@ -70,6 +70,11 @@ Verified on amd64 (Ubuntu 24.04, Docker 29): `pycodestyle` clean; unit tests 181
 and with RocksDB 9.10 (`python:3.14-trixie` container): 21 passed each; `tests/server/test_storage.py` with both engines:
 16 passed; `docker build --no-cache` and `contrib/docker-smoke-test.sh` pass.
 
+Full sync on amd64 (server image with default `CACHE_MB=1200`, against a mainnet Palladium node in Docker, both started on empty
+data directories, 23 GB RAM, WSL2): the server was at the chain tip (height 544,059, 663,860 txs) 18 minutes after the start,
+in parallel with the node download (the node is the bottleneck). Observed (5 minute samples): server memory up to about 330 MiB,
+node up to about 650 MiB; server database 359 MB.
+
 Added: the `unittests`, `docker` and `integration` CI jobs run on amd64 and arm64 (`ubuntu-24.04-arm`);
 `DEPLOY.md` has an "Architectures" section (headers needed to compile `plyvel` and `rocksdb-ng`).
 The first run of the amd64/arm64 CI matrix on GitHub passed (all jobs, both architectures).
@@ -80,7 +85,8 @@ RocksDB tests in `tests/server/test_storage.py` pass with RocksDB 9.10 (the fixt
 
 Still to do or verify:
 
-- **A full sync** of the server image against a real Palladium node on ARM (speed, memory, `CACHE_MB`).
+- **A full sync on ARM** of the server image against a real Palladium node (speed, memory, `CACHE_MB`): the amd64 numbers
+  are above, they are only a reference.
 - **Published image** (none is published today): build it multi-arch with
   `docker buildx build --platform linux/amd64,linux/arm64`.
 
