@@ -54,41 +54,21 @@ describes a full installation.
 
 ## Architectures (amd64 and ARM)
 
-The code is pure Python, the Docker images (server and integration-test node) pick the right binaries
-for the architecture (`TARGETARCH`, Debian packages), so amd64 and arm64 are both meant to work.
+amd64 and arm64 (for example a Raspberry Pi 5) are both supported. The code is pure Python, and the Docker images
+(server and integration-test node) pick the right binaries for the architecture (`TARGETARCH`, Debian packages).
+The CI runs the `unittests`, `integration` (LevelDB and RocksDB) and `docker` jobs on both architectures
+(`ubuntu-24.04` and `ubuntu-24.04-arm`).
 
-Verified on aarch64 (Raspberry Pi, Debian 12, Docker 29):
+Without Docker, the DB engine bindings are compiled from source, so the development headers are needed;
+`rocksdb-ng` requires RocksDB >= 8.0 (Debian 13 or the Docker image, not Debian 12). See the "Architectures" section
+of `DEPLOY.md`.
 
-- the integration-test node image builds (official `aarch64-linux-gnu` release, signature checked);
-- `tests/integration` with LevelDB: 21 passed; unit tests (without `test_storage.py`): 181 passed; `pycodestyle` clean;
-- the server image builds, `contrib/docker-smoke-test.sh` passes and `rocksdb` imports inside it;
-- `tests/integration` with RocksDB 9.10 (`python:3.14-trixie` container): 21 passed;
-- the systemd unit in `contrib/systemd` starts, syncs a regtest chain, answers on the Electrum protocol and
-  `electrumx_rpc`, and stops cleanly through its `ExecStop`.
+To build the server image for both architectures:
 
-Verified on amd64 (Ubuntu 24.04, Docker 29): `pycodestyle` clean; unit tests 181 passed; `tests/integration` with LevelDB
-and with RocksDB 9.10 (`python:3.14-trixie` container): 21 passed each; `tests/server/test_storage.py` with both engines:
-16 passed; `docker build --no-cache` and `contrib/docker-smoke-test.sh` pass.
+    docker buildx build --platform linux/amd64,linux/arm64 -t <registry>/plm-electrumx:<tag> --push .
 
-Full sync on amd64 (server image with default `CACHE_MB=1200`, against a mainnet Palladium node in Docker, both started on empty
-data directories, 23 GB RAM, WSL2): the server was at the chain tip (height 544,059, 663,860 txs) 18 minutes after the start,
-in parallel with the node download (the node is the bottleneck). Observed (5 minute samples): server memory up to about 330 MiB,
-node up to about 650 MiB; server database 359 MB.
-
-Added: the `unittests`, `docker` and `integration` CI jobs run on amd64 and arm64 (`ubuntu-24.04-arm`);
-`DEPLOY.md` has an "Architectures" section (headers needed to compile `plyvel` and `rocksdb-ng`).
-The first run of the amd64/arm64 CI matrix on GitHub passed (all jobs, both architectures).
-`docker build --no-cache` of the server image on arm64 works (`rocksdb-ng` compiles from scratch), and the
-RocksDB tests in `tests/server/test_storage.py` pass with RocksDB 9.10 (the fixture now closes the DB before the `chdir`).
-
-`rocksdb-ng` needs RocksDB >= 8.0: Debian 12 (7.8.3) is too old, use Debian 13 or the Docker image.
-
-Still to do or verify:
-
-- **A full sync on ARM** of the server image against a real Palladium node (speed, memory, `CACHE_MB`): the amd64 numbers
-  are above, they are only a reference.
-- **Published image** (none is published today): build it multi-arch with
-  `docker buildx build --platform linux/amd64,linux/arm64`.
+Building the arm64 variant on an amd64 host needs QEMU emulation (`docker run --privileged --rm tonistiigi/binfmt --install arm64`)
+and is slow, because `rocksdb-ng` is compiled from source; building on an arm64 host is much faster.
 
 ## Fork notes
 
