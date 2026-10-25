@@ -16,10 +16,14 @@ RUN apt-get update \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
+# rocksdb-ng is compiled from source (a single C++ translation unit, slow, especially under QEMU for arm64): install it
+# in its own layer, before the source is copied, so that changing the code does not recompile it
+RUN python -m venv venv \
+    && venv/bin/pip install --no-cache-dir rocksdb-ng
+
 COPY pyproject.toml README.md LICENCE MANIFEST.in ./
 COPY src ./src
-RUN python -m venv venv \
-    && venv/bin/pip install --no-cache-dir ".[rocksdb]"
+RUN venv/bin/pip install --no-cache-dir ".[rocksdb]"
 
 
 FROM python:3.14-slim-trixie
