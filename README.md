@@ -66,8 +66,13 @@ Verified on aarch64 (Raspberry Pi, Debian 12, Docker 29):
 - the systemd unit in `contrib/systemd` starts, syncs a regtest chain, answers on the Electrum protocol and
   `electrumx_rpc`, and stops cleanly through its `ExecStop`.
 
+Verified on amd64 (Ubuntu 24.04, Docker 29): `pycodestyle` clean; unit tests 181 passed; `tests/integration` with LevelDB
+and with RocksDB 9.10 (`python:3.14-trixie` container): 21 passed each; `tests/server/test_storage.py` with both engines:
+16 passed; `docker build --no-cache` and `contrib/docker-smoke-test.sh` pass.
+
 Added: the `unittests`, `docker` and `integration` CI jobs run on amd64 and arm64 (`ubuntu-24.04-arm`);
 `DEPLOY.md` has an "Architectures" section (headers needed to compile `plyvel` and `rocksdb-ng`).
+The first run of the amd64/arm64 CI matrix on GitHub passed (all jobs, both architectures).
 `docker build --no-cache` of the server image on arm64 works (`rocksdb-ng` compiles from scratch), and the
 RocksDB tests in `tests/server/test_storage.py` pass with RocksDB 9.10 (the fixture now closes the DB before the `chdir`).
 
@@ -76,7 +81,6 @@ RocksDB tests in `tests/server/test_storage.py` pass with RocksDB 9.10 (the fixt
 Still to do or verify:
 
 - **A full sync** of the server image against a real Palladium node on ARM (speed, memory, `CACHE_MB`).
-- **First run of the amd64/arm64 CI matrix** on GitHub (nothing amd64 was run on the ARM machine used here).
 - **Published image** (none is published today): build it multi-arch with
   `docker buildx build --platform linux/amd64,linux/arm64`.
 
