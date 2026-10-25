@@ -189,6 +189,13 @@ DONATION_ADDRESS=plm1q...your address...
   amount) and use an address you are happy to make public, since it is sent to everyone who connects.
 - After changing it, apply it with `docker compose up -d` (the container is recreated with the new value).
 
+## Architectures
+
+amd64 and arm64 (for example a Raspberry Pi 5) are both supported: the Docker image builds natively on either.
+Without Docker, the DB engine bindings are compiled from source, so install the development headers first:
+`libleveldb-dev` for LevelDB (`plyvel`), or RocksDB >= 8.0 (`librocksdb-dev`) for RocksDB (`rocksdb-ng`).
+Debian 12 ships RocksDB 7.8.3, which is too old: use Debian 13 (or the Docker image) for RocksDB.
+
 ## Data directory and first start
 
 Create the data directory as the user that runs Docker, before the first start (otherwise Docker creates it as root and

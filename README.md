@@ -66,21 +66,19 @@ Verified on aarch64 (Raspberry Pi, Debian 12, Docker 29):
 - the systemd unit in `contrib/systemd` starts, syncs a regtest chain, answers on the Electrum protocol and
   `electrumx_rpc`, and stops cleanly through its `ExecStop`.
 
+Added: the `unittests`, `docker` and `integration` CI jobs run on amd64 and arm64 (`ubuntu-24.04-arm`);
+`DEPLOY.md` has an "Architectures" section (headers needed to compile `plyvel` and `rocksdb-ng`).
+`docker build --no-cache` of the server image on arm64 works (`rocksdb-ng` compiles from scratch), and the
+RocksDB tests in `tests/server/test_storage.py` pass with RocksDB 9.10 (the fixture now closes the DB before the `chdir`).
+
+`rocksdb-ng` needs RocksDB >= 8.0: Debian 12 (7.8.3) is too old, use Debian 13 or the Docker image.
+
 Still to do or verify:
 
-- **RocksDB version**: `rocksdb-ng` needs RocksDB >= 8.0 and compiles from source; Debian 12 (7.8.3) is too old,
-  use Debian 13 or the Docker image. In `tests/server/test_storage.py` the 7 RocksDB tests error at teardown with
-  9.10 (the fixture does `os.chdir` before `db.close()` on a relative path), the same on ARM and amd64.
-- **Server image build without cache**: confirm that `rocksdb-ng` compiles on arm64 from scratch
-  (`docker build --no-cache -t plm-electrumx .`).
 - **A full sync** of the server image against a real Palladium node on ARM (speed, memory, `CACHE_MB`).
-- **amd64**: nothing was run on this machine, rely on the CI.
-- **CI**: add an ARM runner (`ubuntu-24.04-arm`) to the `unittests`, `integration` and `docker` jobs
-  of `.github/workflows/ci.yml`, so both architectures are tested on every push.
-- **Published image** (if any): build it multi-arch with
+- **First run of the amd64/arm64 CI matrix** on GitHub (nothing amd64 was run on the ARM machine used here).
+- **Published image** (none is published today): build it multi-arch with
   `docker buildx build --platform linux/amd64,linux/arm64`.
-- **Development on ARM**: `plyvel` needs `libleveldb-dev` to compile (`apt install libleveldb-dev`);
-  document it in `DEPLOY.md` if it is useful there.
 
 ## Fork notes
 

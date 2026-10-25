@@ -22,8 +22,8 @@ def db(tmpdir, request):
     os.chdir(str(tmpdir))
     db = db_class(request.param)("db", False)
     yield db
-    os.chdir(cwd)
     db.close()
+    os.chdir(cwd)
 
 
 def test_put_get(db):

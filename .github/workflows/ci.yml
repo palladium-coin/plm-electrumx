@@ -14,8 +14,13 @@ concurrency:
 
 jobs:
   unittests:
-    name: unittests
-    runs-on: ubuntu-24.04
+    name: unittests (${{ matrix.os }})
+    # amd64 and arm64 runners
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -94,8 +99,12 @@ jobs:
 
   docker:
     # builds the image and checks the SSL handling of its entrypoint (contrib/docker-smoke-test.sh)
-    name: docker
-    runs-on: ubuntu-24.04
+    name: docker (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
     steps:
       - uses: actions/checkout@v6
 
@@ -107,12 +116,13 @@ jobs:
 
   integration:
     # ElectrumX against a real Palladium node in regtest mode (tests/integration), with each DB engine
-    name: integration (${{ matrix.db_engine }})
-    runs-on: ubuntu-24.04
+    name: integration (${{ matrix.db_engine }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         db_engine: [leveldb, rocksdb]
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
     steps:
       - uses: actions/checkout@v6
 

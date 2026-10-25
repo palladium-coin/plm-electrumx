@@ -62,5 +62,5 @@ Integration tests (`tests/integration`): `node/Dockerfile` + `node/palladium.con
 - History is a snapshot of upstream commit `280cb33` plus Palladium commits: no common history, `git merge upstream` does not work. Update with `git diff 280cb33 upstream/master | git apply --3way` (see the "Fork notes" in `README.md`).
 - Do not create, move or delete git tags.
 - Do not `git add -A`: generated files (`.coverage`, `.env`) get swept in. Add files by name. `.coverage` and `.env` are in `.gitignore`.
-- CI (`.github/workflows/ci.yml`, on `main`): `unittests`, `pycodestyle`, `build_docs`, `docker` (builds the image, runs the smoke test). It runs on Ubuntu 24.04; `test_storage.py` fails with RocksDB 9.10 (Debian trixie) in teardown.
+- CI (`.github/workflows/ci.yml`, on `main`): `unittests`, `pycodestyle`, `build_docs`, `docker` (builds the image, runs the smoke test). It runs on Ubuntu 24.04, amd64 and arm64 (`ubuntu-24.04-arm`) for `unittests`, `docker` and `integration`.
 - In repo documentation never cite paths or links of the palladiumcore repository; describe the concept (the Palladium node, the `palladium` Docker network).
